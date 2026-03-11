@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Control Financiero — Pedro Luis</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: #080810; color: #e8d5a3; font-family: Georgia, serif; min-height: 100vh; padding-bottom: 80px; }
+
+  .header { background: #0d0d18; border-bottom: 1px solid #1e1e2e; padding: 12px 16px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+  .header-left .sub { font-size: 9px; color: #5a5a7a; letter-spacing: 3px; text-transform: uppercase; }
+  .header-left .name { font-size: 15px; font-weight: bold; }
+  .header-right { text-align: right; }
+  .header-right .day { font-size: 9px; color: #5a5a7a; }
+  .header-right .salary { font-size: 16px; color: #5a9a5a; font-weight: bold; }
+
+  .alerts { background: #140808; border-bottom: 1px solid #3a1010; padding: 6px 16px; display: none; }
+  .alert-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+
+  .tabs { background: #0d0d18; border-bottom: 1px solid #1e1e2e; display: flex; overflow-x: auto; }
+  .tab-btn { background: none; border: none; cursor: pointer; padding: 12px 16px; font-size: 12px; color: #4a4a5a; border-bottom: 2px solid transparent; white-space: nowrap; font-family: Georgia, serif; }
+  .tab-btn.active { color: #e8d5a3; border-bottom: 2px solid #7a6a2a; }
+
+  .content { max-width: 760px; margin: 0 auto; padding: 16px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card { background: #0d0d18; border: 1px solid #2a2a3a; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card-green { background: linear-gradient(135deg,#0d1a0d,#080f08); border: 1px solid #1a3a1a; }
+  .card-red { background: linear-gradient(135deg,#1a0d0d,#0f0808); border: 1px solid #3a1a1a; }
+
+  .label { font-size: 9px; color: #5a5a7a; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+  .big-num { font-size: 28px; font-weight: bold; }
+  .med-num { font-size: 20px; font-weight: bold; }
+  .small-num { font-size: 15px; font-weight: bold; }
+  .hint { font-size: 11px; color: #5a5a7a; margin-top: 4px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .mini-card { background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 10px; padding: 12px; text-align: center; }
+
+  .bar-wrap { background: #1a1a2a; border-radius: 4px; height: 8px; overflow: hidden; margin: 8px 0; }
+  .bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+  input[type=number], input[type=text] { background: #12121e; border: 1px solid #2a2a3a; border-radius: 8px; padding: 10px 12px; color: #e8d5a3; font-size: 14px; width: 100%; font-family: Georgia, serif; outline: none; }
+  input::placeholder { color: #3a3a5a; }
+  textarea { background: #12121e; border: 1px solid #2a2a3a; border-radius: 8px; padding: 10px 12px; color: #e8d5a3; font-size: 14px; width: 100%; font-family: Georgia, serif; outline: none; resize: none; }
+
+  .btn { border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer; font-size: 13px; font-family: Georgia, serif; }
+  .btn-green { background: #1a3a1a; border: 1px solid #2a5a2a; color: #5a9a5a; }
+  .btn-red { background: #2a1a1a; border: 1px solid #4a2a2a; color: #8a5a5a; }
+  .btn-gray { background: #1a1a2a; border: 1px solid #3a3a5a; color: #7a7a9a; }
+  .btn-full { width: 100%; margin-top: 6px; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #14141e; }
+  .row:last-child { border-bottom: none; }
+  .row-label { font-size: 13px; color: #e8d5a3; }
+  .row-sub { font-size: 10px; color: #4a4a6a; }
+  .row-val { font-size: 13px; font-weight: bold; }
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-right: 8px; }
+  .dot-sq { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; margin-right: 5px; }
+
+  .cat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin: 8px 0; }
+  .cat-btn { background: #0d0d18; border: 1px solid #2a2a3a; border-radius: 6px; padding: 6px 2px; cursor: pointer; color: #5a5a7a; font-size: 10px; text-align: center; font-family: Georgia, serif; }
+  .cat-btn.sel { background: #1e1e30; color: #e8d5a3; }
+
+  .tipo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+  .tipo-btn { background: #0d0d18; border: 1px solid #2a2a3a; border-radius: 6px; padding: 8px; cursor: pointer; color: #5a5a7a; font-size: 12px; font-family: Georgia, serif; }
+  .tipo-btn.sel-e { background: #1e0d0d; border-color: #ef4444; color: #ef4444; }
+  .tipo-btn.sel-i { background: #0d1e0d; border-color: #22c55e; color: #22c55e; }
+
+  .day-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .day-cell { border-radius: 5px; padding: 4px 2px; text-align: center; border: 1px solid #1a1a2a; background: #0a0a14; }
+  .day-cell.today { background: #1e1e0a; border-color: #5a5a1a; }
+  .day-cell.good { background: #0a1e0a; border-color: #1a4a1a; }
+  .day-cell.bad { background: #1e0a0a; border-color: #4a1a1a; }
+  .day-cell.future { opacity: 0.2; }
+  .day-num { font-size: 10px; color: #6a6a7a; }
+  .day-cell.today .day-num { color: #e8d5a3; font-weight: bold; }
+  .day-amt { font-size: 8px; }
+
+  .credito-card { background: #0d0d18; border: 1px solid #2a2a3a; border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left-width: 4px; }
+  .credito-card.pagado { opacity: 0.65; border-color: #1a3a1a; }
+  .credito-name { font-size: 14px; font-weight: bold; margin-bottom: 2px; }
+  .credito-tasa { font-size: 11px; margin-bottom: 10px; }
+  .credito-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field-box { background: #080810; border-radius: 8px; padding: 10px; }
+  .field-lbl { font-size: 9px; color: #5a5a7a; margin-bottom: 3px; }
+  .field-input { background: none; border: none; font-size: 15px; font-weight: bold; width: 100%; outline: none; font-family: Georgia, serif; }
+
+  .cal-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .cal-day { width: 42px; height: 42px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: #5a5a7a; background: #0d0d18; border: 2px solid #2a2a3a; }
+  .cal-day.today { background: #1e1e08; border-color: #7a6a1a; color: #e8d5a3; }
+  .cal-day.done { border-color: #1a4a1a; }
+  .cal-content { flex: 1; background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 10px; padding: 10px; }
+  .cal-item { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; border-bottom: 1px solid #14141e; }
+  .cal-item:last-child { border-bottom: none; }
+  .badge { font-size: 9px; background: #1a3a1a; color: #5a9a5a; padding: 2px 7px; border-radius: 4px; }
+
+  .sep { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .form-box { background: #080810; border: 1px solid #2a2a3a; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+  .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+  .green { color: #22c55e; } .red { color: #ef4444; } .yellow { color: #f59e0b; } .blue { color: #06b6d4; } .purple { color: #a855f7; } .pink { color: #ec4899; } .gray { color: #6b7280; }
+  .bold { font-weight: bold; }
+  .mt4 { margin-top: 4px; } .mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; }
+  .flex { display: flex; align-items: center; }
+  .del-btn { background: none; border: none; cursor: pointer; color: #4a2020; font-size: 14px; padding: 0 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="sub">Control Financiero</div>
+    <div class="name">Pedro Luis Nuñez</div>
+  </div>
+  <div class="header-right">
+    <div class="day" id="fecha-hoy"></div>
+    <div class="salary">$8.822.211</div>
+  </div>
+</div>
+
+<div class="alerts" id="alerts-box"></div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('cuenta')">💳 Cuenta</button>
+  <button class="tab-btn" onclick="showTab('caja')">📊 Caja</button>
+  <button class="tab-btn" onclick="showTab('creditos')">🏦 Créditos</button>
+  <button class="tab-btn" onclick="showTab('fechas')">📅 Fechas</button>
+</div>
+
+<div class="content">
+
+  <!-- CUENTA -->
+  <div id="panel-cuenta" class="panel active">
+    <div id="saldo-card" class="card card-green">
+      <div class="label">Saldo en Bancolombia ahora</div>
+      <div class="big-num green" id="saldo-display">Sin registrar hoy</div>
+      <div class="hint" id="gasto-hoy-txt"></div>
+      <div class="hint mt4" id="ahorro-txt"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">📱 Registrar saldo al final del día</div>
+      <div class="form-row mt8">
+        <input type="number" id="input-saldo" placeholder="¿Cuánto tienes en cuenta ahora?">
+        <button class="btn btn-green" onclick="guardarSaldo()" style="white-space:nowrap;flex-shrink:0">Guardar</button>
+      </div>
+      <div class="hint">Presupuesto diario ideal: <span class="yellow bold" id="presup-diario-txt"></span></div>
+    </div>
+
+    <div class="grid3">
+      <div class="mini-card">
+        <div class="label">Gastado hoy</div>
+        <div class="small-num" id="gasto-hoy-card">—</div>
+      </div>
+      <div class="mini-card">
+        <div class="label">Límite/día</div>
+        <div class="small-num yellow" id="limite-dia-card"></div>
+      </div>
+      <div class="mini-card">
+        <div class="label">Ahorro acum.</div>
+        <div class="small-num" id="ahorro-acum-card">$0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sep">
+        <div class="label" style="margin:0">Movimientos del día</div>
+        <button class="btn btn-gray btn-sm" onclick="toggleMovForm()">+ Agregar</button>
+      </div>
+      <div id="mov-form" class="form-box" style="display:none">
+        <input type="text" id="mov-nota" placeholder="¿En qué? (ej: almuerzo, bus...)" style="margin-bottom:8px">
+        <input type="number" id="mov-monto" placeholder="Monto en pesos" style="margin-bottom:8px">
+        <div class="cat-grid" id="cat-grid"></div>
+        <div class="tipo-grid">
+          <button class="tipo-btn sel-e" id="tipo-e" onclick="setTipo('egreso')">📤 Egreso</button>
+          <button class="tipo-btn" id="tipo-i" onclick="setTipo('ingreso')">📥 Ingreso</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-green" style="flex:1" onclick="agregarMov()">✅ Guardar</button>
+          <button class="btn btn-red" style="flex:1" onclick="toggleMovForm()">Cancelar</button>
+        </div>
+      </div>
+      <div id="movs-hoy-list"><div style="text-align:center;color:#3a3a5a;padding:16px;font-size:13px">Sin movimientos hoy</div></div>
+    </div>
+
+    <div class="card" id="historial-card">
+      <div class="label">Historial de saldos</div>
+      <div id="historial-list"></div>
+    </div>
+  </div>
+
+  <!-- CAJA -->
+  <div id="panel-caja" class="panel">
+    <div class="card" id="caja-estado-card">
+      <div class="label">Estado de la Caja Menor</div>
+      <div class="grid2 mt8" style="margin-bottom:0">
+        <div>
+          <div style="font-size:11px;color:#5a7a5a">Presupuesto mes</div>
+          <div class="med-num">$1.008.790</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#5a7a5a">Ahorro / Déficit</div>
+          <div class="med-num" id="caja-ahorro"></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#5a7a5a">Ideal por día</div>
+          <div class="small-num yellow" id="caja-diario"></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#5a7a5a">Días restantes</div>
+          <div class="small-num blue" id="caja-dias-rest"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Gasto diario calculado — Marzo</div>
+      <div class="day-grid mt8" id="day-calendar"></div>
+      <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:#5a5a7a">
+        <span>🟢 Dentro del límite</span><span>🔴 Excedido</span>
+      </div>
+    </div>
+
+    <div class="card" id="cat-resumen-card">
+      <div class="label">Gastos por categoría (mes)</div>
+      <div id="cat-resumen-list"></div>
+    </div>
+  </div>
+
+  <!-- CRÉDITOS -->
+  <div id="panel-creditos" class="panel">
+    <div class="grid2">
+      <div class="mini-card">
+        <div class="label">Deuda total</div>
+        <div class="med-num red" id="total-deuda"></div>
+      </div>
+      <div class="mini-card">
+        <div class="label">Cuotas mes</div>
+        <div class="med-num purple" id="total-cuotas"></div>
+        <div class="hint" id="pagados-txt"></div>
+      </div>
+    </div>
+    <div id="creditos-list"></div>
+    <div class="card" style="background:#0d1a0d;border-color:#1a3a1a">
+      <div class="label" style="color:#5a8a5a">💡 Estrategia Avalancha</div>
+      <div style="font-size:12px;color:#7a8a7a;line-height:1.7;margin-top:6px">
+        Paga primero <strong style="color:#ef4444">ADDI 50%</strong> → <strong style="color:#a855f7">Nu 43%</strong> → <strong style="color:#ec4899">Bajo Monto 34%</strong>. Cada mes actualiza la deuda tocando el número. Con tu disponible aplica pagos extras en este orden.
+      </div>
+    </div>
+  </div>
+
+  <!-- FECHAS -->
+  <div id="panel-fechas" class="panel">
+    <div class="label">Calendario mensual recurrente</div>
+    <div id="cal-list" class="mt8"></div>
+    <div class="card" style="background:#14140a;border-color:#2a2a1a;margin-top:8px">
+      <div class="label" style="color:#7a7a4a">⚠️ Reserva pre-nómina</div>
+      <div style="font-size:12px;color:#7a7a5a;line-height:1.7;margin-top:6px">
+        Día 22 al cobrar, aparta <strong style="color:#f59e0b">$1.828.349</strong> para los pagos de los días 2, 3 y 10 del mes siguiente.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ DATOS ============
+const SALARIO = 8822211;
+const PRESUPUESTO_CAJA = 1008790;
+const DIAS_MES = 31;
+const PRESUPUESTO_DIARIO = Math.round(PRESUPUESTO_CAJA / DIAS_MES);
+const HOY = new Date();
+const DIA_HOY = HOY.getDate();
+const HOY_KEY = HOY.toISOString().split("T")[0];
+const AYER = new Date(HOY); AYER.setDate(AYER.getDate()-1);
+const AYER_KEY = AYER.toISOString().split("T")[0];
+
+const CATEGORIAS = [
+  {id:"caja", label:"🏠 Casa", color:"#22c55e"},
+  {id:"credito", label:"🏦 Crédito", color:"#818cf8"},
+  {id:"familia", label:"👨‍👩‍👧 Familia", color:"#f59e0b"},
+  {id:"disfrute", label:"🎉 Disfrute", color:"#ec4899"},
+  {id:"factura", label:"🧾 Factura", color:"#06b6d4"},
+  {id:"arriendo", label:"🏘️ Arriendo", color:"#a855f7"},
+  {id:"otro", label:"📦 Otro", color:"#6b7280"},
+];
+
+const CREDITOS_INIT = [
+  {id:1,nombre:"Bancolombia Consumo",deuda:59364836,cuota:1850443,tasa:21.69,diaPago:12,color:"#22c55e",pagado:false},
+  {id:2,nombre:"Mastercard *6440",deuda:15911179,cuota:1300000,tasa:25.18,diaPago:2,color:"#f59e0b",pagado:true},
+  {id:3,nombre:"ADDI Joyería",deuda:2570158,cuota:229842,tasa:50.00,diaPago:2,color:"#ef4444",pagado:true},
+  {id:4,nombre:"Nu Préstamo",deuda:4882029,cuota:298507,tasa:43.29,diaPago:3,color:"#a855f7",pagado:true},
+  {id:5,nombre:"Nu Tarjeta (esposa)",deuda:1007018,cuota:54240,tasa:43.29,diaPago:18,color:"#8b5cf6",pagado:false},
+  {id:6,nombre:"Visa *0924 (esposa)",deuda:227059,cuota:75219,tasa:25.00,diaPago:16,color:"#06b6d4",pagado:false},
+  {id:7,nombre:"Crédito Bajo Monto",deuda:3068000,cuota:195000,tasa:34.49,diaPago:10,color:"#ec4899",pagado:false},
+];
+
+// ============ STORAGE ============
+function cargar() {
+  try { return JSON.parse(localStorage.getItem("pedro-v4") || "null"); } catch(e) { return null; }
+}
+function guardar(d) {
+  try { localStorage.setItem("pedro-v4", JSON.stringify(d)); } catch(e) {}
+}
+
+let APP = cargar() || {
+  creditos: CREDITOS_INIT,
+  saldos: {},
+  movimientos: [],
+  ahorroAcumulado: 0,
+};
+
+// ============ HELPERS ============
+function fmt(n) {
+  return "$" + Math.abs(Math.round(n)).toLocaleString("es-CO");
+}
+function fmtS(n) {
+  const a = Math.abs(n), s = n < 0 ? "-" : "";
+  if(a >= 1000000) return s+"$"+(a/1000000).toFixed(1)+"M";
+  if(a >= 1000) return s+"$"+(a/1000).toFixed(0)+"K";
+  return s+"$"+a;
+}
+
+function calcAhorro(saldos) {
+  let acum = 0;
+  const keys = Object.keys(saldos).sort();
+  for(let i=1;i<keys.length;i++) {
+    const s1 = saldos[keys[i-1]], s2 = saldos[keys[i]];
+    if(s1 !== undefined && s2 !== undefined) {
+      const g = Math.max(0, s1-s2);
+      acum += PRESUPUESTO_DIARIO - g;
+    }
+  }
+  return acum;
+}
+
+// ============ INIT UI ============
+let catSeleccionada = "caja";
+let tipoMov = "egreso";
+
+document.getElementById("fecha-hoy").textContent = "Día "+DIA_HOY+" · Marzo 2026";
+document.getElementById("presup-diario-txt").textContent = fmt(PRESUPUESTO_DIARIO);
+document.getElementById("limite-dia-card").textContent = fmt(PRESUPUESTO_DIARIO);
+document.getElementById("caja-diario").textContent = fmt(PRESUPUESTO_DIARIO);
+
+// Build cat grid
+const catGrid = document.getElementById("cat-grid");
+CATEGORIAS.forEach(cat => {
+  const b = document.createElement("button");
+  b.className = "cat-btn" + (cat.id === catSeleccionada ? " sel" : "");
+  b.id = "cat-"+cat.id;
+  b.style.borderColor = cat.id === catSeleccionada ? cat.color : "#2a2a3a";
+  b.textContent = cat.label;
+  b.onclick = () => {
+    catSeleccionada = cat.id;
+    CATEGORIAS.forEach(c => {
+      const el = document.getElementById("cat-"+c.id);
+      if(el) { el.className = "cat-btn" + (c.id === cat.id ? " sel" : ""); el.style.borderColor = c.id === cat.id ? c.color : "#2a2a3a"; }
+    });
+  };
+  catGrid.appendChild(b);
+});
+
+function setTipo(t) {
+  tipoMov = t;
+  document.getElementById("tipo-e").className = "tipo-btn" + (t==="egreso" ? " sel-e" : "");
+  document.getElementById("tipo-i").className = "tipo-btn" + (t==="ingreso" ? " sel-i" : "");
+}
+
+// ============ TABS ============
+function showTab(id) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("panel-"+id).classList.add("active");
+  event.target.classList.add("active");
+  render();
+}
+
+function toggleMovForm() {
+  const f = document.getElementById("mov-form");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+}
+
+// ============ ACCIONES ============
+function guardarSaldo() {
+  const val = parseInt(document.getElementById("input-saldo").value);
+  if(isNaN(val)) return;
+  APP.saldos[HOY_KEY] = val;
+  APP.ahorroAcumulado = calcAhorro(APP.saldos);
+  guardar(APP);
+  document.getElementById("input-saldo").value = "";
+  render();
+}
+
+function agregarMov() {
+  const nota = document.getElementById("mov-nota").value.trim();
+  const monto = parseInt(document.getElementById("mov-monto").value);
+  if(!nota || isNaN(monto)) return;
+  APP.movimientos.push({ id: Date.now(), fecha: HOY_KEY, dia: DIA_HOY, monto, categoria: catSeleccionada, nota, tipo: tipoMov });
+  guardar(APP);
+  document.getElementById("mov-nota").value = "";
+  document.getElementById("mov-monto").value = "";
+  document.getElementById("mov-form").style.display = "none";
+  render();
+}
+
+function eliminarMov(id) {
+  APP.movimientos = APP.movimientos.filter(m => m.id !== id);
+  guardar(APP);
+  render();
+}
+
+function togglePagado(id) {
+  APP.creditos = APP.creditos.map(c => c.id === id ? {...c, pagado: !c.pagado} : c);
+  guardar(APP);
+  render();
+}
+
+function actualizarDeuda(id, val) {
+  const v = parseInt(val); if(isNaN(v)) return;
+  APP.creditos = APP.creditos.map(c => c.id === id ? {...c, deuda: v} : c);
+  guardar(APP);
+}
+
+function actualizarCuota(id, val) {
+  const v = parseInt(val); if(isNaN(v)) return;
+  APP.creditos = APP.creditos.map(c => c.id === id ? {...c, cuota: v} : c);
+  guardar(APP);
+}
+
+// ============ RENDER ============
+function render() {
+  const saldoHoy = APP.saldos[HOY_KEY] ?? null;
+  const saldoAyer = APP.saldos[AYER_KEY] ?? null;
+  const gastoHoy = (saldoHoy !== null && saldoAyer !== null) ? Math.max(0, saldoAyer - saldoHoy) : null;
+  const ahorroHoy = gastoHoy !== null ? PRESUPUESTO_DIARIO - gastoHoy : 0;
+  const ahorro = APP.ahorroAcumulado || 0;
+
+  // --- Alertas ---
+  const alertBox = document.getElementById("alerts-box");
+  const alertas = APP.creditos.filter(c => {
+    if(c.pagado) return false;
+    const d = c.diaPago >= DIA_HOY ? c.diaPago - DIA_HOY : 30 - DIA_HOY + c.diaPago;
+    return d <= 5;
+  });
+  if(alertas.length > 0) {
+    alertBox.style.display = "block";
+    alertBox.innerHTML = alertas.map(a => {
+      const d = a.diaPago >= DIA_HOY ? a.diaPago - DIA_HOY : 30 - DIA_HOY + a.diaPago;
+      return `<div class="alert-row"><span style="color:${d===0?'#ef4444':'#f59e0b'}">${d===0?'⚠️':'🔔'} ${a.nombre} — ${d===0?'¡HOY!':'en '+d+' días'}</span><span style="color:#ef4444">${fmt(a.cuota)}</span></div>`;
+    }).join("");
+  } else { alertBox.style.display = "none"; }
+
+  // --- Cuenta ---
+  const sd = document.getElementById("saldo-display");
+  if(saldoHoy !== null) { sd.textContent = fmt(saldoHoy); sd.className = "big-num green"; }
+  else { sd.textContent = "Sin registrar hoy"; sd.className = "big-num"; sd.style.color = "#3a5a3a"; }
+
+  const gt = document.getElementById("gasto-hoy-txt");
+  if(gastoHoy !== null) {
+    const ok = gastoHoy <= PRESUPUESTO_DIARIO;
+    gt.innerHTML = `Gasto calculado hoy: <strong style="color:${ok?'#22c55e':'#ef4444'}">${fmt(gastoHoy)}</strong> (${ok?'ahorras '+fmt(PRESUPUESTO_DIARIO-gastoHoy):'excedes '+fmt(gastoHoy-PRESUPUESTO_DIARIO)})`;
+  } else gt.textContent = "";
+
+  document.getElementById("ahorro-txt").innerHTML = ahorro !== 0
+    ? `<span style="color:${ahorro>0?'#5a9a5a':'#ef4444'}">${ahorro>0?'✅ Ahorro acumulado: +':'⚠️ Déficit: -'}${fmt(Math.abs(ahorro))}</span>`
+    : "";
+
+  const ghc = document.getElementById("gasto-hoy-card");
+  if(gastoHoy !== null) { ghc.textContent = fmtS(gastoHoy); ghc.style.color = gastoHoy <= PRESUPUESTO_DIARIO ? "#22c55e" : "#ef4444"; }
+  else { ghc.textContent = "—"; ghc.style.color = "#5a5a7a"; }
+
+  const aac = document.getElementById("ahorro-acum-card");
+  aac.textContent = (ahorro >= 0 ? "+" : "") + fmtS(ahorro);
+  aac.style.color = ahorro >= 0 ? "#22c55e" : "#ef4444";
+
+  // Movimientos hoy
+  const movsHoy = APP.movimientos.filter(m => m.fecha === HOY_KEY);
+  const ml = document.getElementById("movs-hoy-list");
+  if(movsHoy.length === 0) { ml.innerHTML = '<div style="text-align:center;color:#3a3a5a;padding:16px;font-size:13px">Sin movimientos hoy</div>'; }
+  else {
+    ml.innerHTML = [...movsHoy].reverse().map(m => {
+      const cat = CATEGORIAS.find(c => c.id === m.categoria) || CATEGORIAS[6];
+      return `<div class="row">
+        <div class="flex"><div class="dot" style="background:${cat.color}"></div>
+          <div><div class="row-label">${m.nota}</div><div class="row-sub">${cat.label}</div></div>
+        </div>
+        <div class="flex" style="gap:8px">
+          <span class="row-val" style="color:${m.tipo==='egreso'?'#ef4444':'#22c55e'}">${m.tipo==='egreso'?'-':'+'}${fmt(m.monto)}</span>
+          <button class="del-btn" onclick="eliminarMov(${m.id})">✕</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // Historial
+  const keys = Object.keys(APP.saldos).sort().reverse().slice(0,10);
+  const hl = document.getElementById("historial-list");
+  if(keys.length === 0) { hl.innerHTML = '<div style="color:#3a3a5a;font-size:12px;padding:8px 0">Sin historial aún</div>'; }
+  else {
+    const allKeys = Object.keys(APP.saldos).sort();
+    hl.innerHTML = keys.map(k => {
+      const idx = allKeys.indexOf(k);
+      const prev = idx > 0 ? allKeys[idx-1] : null;
+      const s = APP.saldos[k];
+      const sp = prev ? APP.saldos[prev] : null;
+      const g = sp !== null && sp !== undefined ? Math.max(0, sp-s) : null;
+      const ad = g !== null ? PRESUPUESTO_DIARIO - g : null;
+      const dia = parseInt(k.split("-")[2]);
+      return `<div class="row">
+        <div><div class="row-label">Día ${dia}</div>
+        ${g !== null ? `<div class="row-sub" style="color:${ad>=0?'#5a9a5a':'#ef4444'}">Gasto: ${fmt(g)} · ${ad>=0?'Ahorro: +'+fmt(ad):'Exceso: -'+fmt(Math.abs(ad))}</div>` : ''}
+        </div>
+        <div class="row-val green">${fmt(s)}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // --- Caja ---
+  document.getElementById("caja-ahorro").textContent = (ahorro>=0?"+":"")+fmtS(ahorro);
+  document.getElementById("caja-ahorro").style.color = ahorro >= 0 ? "#22c55e" : "#ef4444";
+  document.getElementById("caja-dias-rest").textContent = DIAS_MES - DIA_HOY;
+
+  // Calendario días
+  const dc = document.getElementById("day-calendar");
+  dc.innerHTML = Array.from({length:DIAS_MES},(_,i)=>i+1).map(dia => {
+    const k = `2026-03-${String(dia).padStart(2,"0")}`;
+    const pk = `2026-03-${String(dia-1).padStart(2,"0")}`;
+    const s = APP.saldos[k], sp = APP.saldos[pk];
+    const g = (s!==undefined && sp!==undefined) ? Math.max(0,sp-s) : null;
+    const ad = g !== null ? PRESUPUESTO_DIARIO - g : null;
+    const fut = dia > DIA_HOY, es = dia === DIA_HOY;
+    let cls = "day-cell";
+    if(es) cls += " today";
+    else if(g !== null) cls += ad >= 0 ? " good" : " bad";
+    if(fut) cls += " future";
+    return `<div class="${cls}"><div class="day-num">${dia}</div>${g!==null?`<div class="day-amt" style="color:${ad>=0?'#22c55e':'#ef4444'}">${fmtS(g)}</div>`:''}`;
+  }).join("");
+
+  // Categorías resumen
+  const cr = document.getElementById("cat-resumen-list");
+  const catTotals = CATEGORIAS.map(cat => ({
+    ...cat,
+    total: APP.movimientos.filter(m=>m.categoria===cat.id&&m.tipo==="egreso").reduce((s,m)=>s+m.monto,0)
+  })).filter(c=>c.total>0);
+  if(catTotals.length === 0) cr.innerHTML = '<div style="color:#3a3a5a;font-size:12px;padding:8px 0">Sin movimientos registrados</div>';
+  else cr.innerHTML = catTotals.map(c => `<div class="row"><div class="flex"><div class="dot-sq" style="background:${c.color}"></div><span style="font-size:13px;color:#c8c8a8">${c.label}</span></div><span class="row-val">${fmt(c.total)}</span></div>`).join("");
+
+  // --- Créditos ---
+  const td = APP.creditos.reduce((s,c)=>s+c.deuda,0);
+  const tc = APP.creditos.reduce((s,c)=>s+c.cuota,0);
+  const cp = APP.creditos.filter(c=>c.pagado).length;
+  document.getElementById("total-deuda").textContent = fmtS(td);
+  document.getElementById("total-cuotas").textContent = fmtS(tc);
+  document.getElementById("pagados-txt").textContent = `${cp}/${APP.creditos.length} pagados`;
+
+  const cl = document.getElementById("creditos-list");
+  cl.innerHTML = [...APP.creditos].sort((a,b)=>b.tasa-a.tasa).map(c => `
+    <div class="credito-card${c.pagado?' pagado':''}" style="border-left-color:${c.color}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div class="credito-name">${c.nombre}</div>
+          <div class="credito-tasa" style="color:${c.tasa>=40?'#ef4444':c.tasa>=25?'#f59e0b':'#22c55e'}">${c.tasa}% E.A. · Día ${c.diaPago}</div>
+        </div>
+        <button class="btn btn-sm ${c.pagado?'btn-green':'btn-gray'}" onclick="togglePagado(${c.id})">${c.pagado?'✅ Pagado':'Marcar pagado'}</button>
+      </div>
+      <div class="credito-fields">
+        <div class="field-box">
+          <div class="field-lbl">DEUDA ACTUAL ✏️</div>
+          <input class="field-input" style="color:#ef4444" type="number" value="${c.deuda}" onblur="actualizarDeuda(${c.id},this.value)">
+        </div>
+        <div class="field-box">
+          <div class="field-lbl">CUOTA MES ✏️</div>
+          <input class="field-input" style="color:#e8d5a3" type="number" value="${c.cuota}" onblur="actualizarCuota(${c.id},this.value)">
+        </div>
+      </div>
+    </div>`).join("");
+
+  // --- Calendario fechas ---
+  const eventos = [
+    {dia:2,items:[{n:"Mastercard *6440",v:1300000},{n:"ADDI Joyería",v:229842}],tipo:"pago"},
+    {dia:3,items:[{n:"Nu Préstamo",v:298507}],tipo:"pago"},
+    {dia:10,items:[{n:"Crédito Bajo Monto",v:195000}],tipo:"pago"},
+    {dia:12,items:[{n:"Bancolombia Consumo",v:1850443}],tipo:"pago"},
+    {dia:16,items:[{n:"Visa *0924 esposa",v:75219},{n:"Claro línea 1",v:51155}],tipo:"pago"},
+    {dia:18,items:[{n:"Nu Tarjeta esposa",v:54240}],tipo:"pago"},
+    {dia:22,items:[{n:"💰 NÓMINA",v:8822211}],tipo:"nomina"},
+    {dia:23,items:[{n:"Familia",v:1650000},{n:"Arriendo",v:1700000},{n:"Claro línea 2",v:109015}],tipo:"gasto"},
+  ];
+  const calList = document.getElementById("cal-list");
+  calList.innerHTML = eventos.map(ev => {
+    const pasado = ev.dia < DIA_HOY, esH = ev.dia === DIA_HOY;
+    const faltan = ev.dia > DIA_HOY ? ev.dia - DIA_HOY : null;
+    const credEv = ev.tipo==="pago" ? ev.items.map(it=>APP.creditos.find(c=>c.nombre===it.n)).filter(Boolean) : [];
+    const pagado = credEv.length > 0 && credEv.every(c=>c?.pagado);
+    return `<div class="cal-row" style="opacity:${pasado?0.4:1}">
+      <div class="cal-day${esH?' today':''}${pagado?' done':''}" style="${pagado?'border-color:#1a4a1a':''}">${pagado?'✅':ev.dia}</div>
+      <div class="cal-content">
+        ${esH?'<div style="font-size:9px;color:#7a6a1a;letter-spacing:2px;margin-bottom:3px">HOY</div>':''}
+        ${faltan!==null&&faltan<=5?`<div style="font-size:9px;color:#f59e0b;margin-bottom:3px">⏰ en ${faltan} día${faltan!==1?'s':''}</div>`:''}
+        ${ev.items.map((it,j)=>`<div class="cal-item" style="${j===ev.items.length-1?'border-bottom:none':''}">
+          <span style="color:${ev.tipo==='nomina'?'#5a9a5a':'#b8b89a'}">${it.n}</span>
+          <span style="color:${ev.tipo==='nomina'?'#5a9a5a':'#e8d5a3'};font-weight:bold">${ev.tipo==='nomina'?'+':'-'}${fmt(it.v)}</span>
+        </div>`).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+render();
+</script>
+</body>
+</html>
