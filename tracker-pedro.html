@@ -95,11 +95,14 @@
     <div style="font-size:20px;font-weight:bold;margin-bottom:6px">Control Financiero</div>
     <div style="font-size:12px;color:#6a6a5a;margin-bottom:4px">Pedro Luis Nuñez Suarez</div>
     <div style="font-size:13px;color:#5a5a7a;margin-bottom:28px;line-height:1.6">Tus datos se guardan en tu Google Drive de forma segura y privada.</div>
-    <button class="google-btn" onclick="iniciarSesion()">
+    <button class="google-btn" id="google-login-btn" onclick="iniciarSesion(); return false;">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continuar con Google
     </button>
     <div style="font-size:10px;color:#3a3a5a;margin-top:16px">Solo tú tienes acceso a tus datos</div>
+    <div id="login-fallback" style="margin-top:12px;text-align:center">
+      <a id="login-link" href="#" onclick="iniciarSesion();return false;" style="font-size:12px;color:#4a6a9a;text-decoration:underline">¿El botón no funciona? Toca aquí</a>
+    </div>
   </div>
 </div>
 
@@ -246,7 +249,22 @@ const fmt=n=>"$"+Math.abs(Math.round(n)).toLocaleString("es-CO");
 const fmtS=n=>{const a=Math.abs(n),s=n<0?"-":"";return a>=1e6?s+"$"+(a/1e6).toFixed(1)+"M":a>=1e3?s+"$"+(a/1e3).toFixed(0)+"K":s+"$"+a;};
 function calcAhorro(s){let ac=0;const ks=Object.keys(s).sort();for(let i=1;i<ks.length;i++){const s1=s[ks[i-1]],s2=s[ks[i]];if(s1!==undefined&&s2!==undefined)ac+=PRESUPUESTO_DIARIO-Math.max(0,s1-s2);}return ac;}
 function setSyncStatus(m,c="#4a4a6a"){const el=document.getElementById("sync-status");if(el){el.textContent=m;el.style.color=c;}}
-function iniciarSesion(){const p=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:location.href.split("?")[0].split("#")[0],response_type:"token",scope:SCOPES,prompt:"select_account"});location.href="https://accounts.google.com/o/oauth2/auth?"+p;}
+function iniciarSesion(){
+  try {
+    const base = location.href.split("?")[0].split("#")[0];
+    const p = new URLSearchParams({
+      client_id: CLIENT_ID,
+      redirect_uri: base,
+      response_type: "token",
+      scope: SCOPES,
+      prompt: "select_account"
+    });
+    const url = "https://accounts.google.com/o/oauth2/auth?" + p.toString();
+    window.location.assign(url);
+  } catch(e) {
+    alert("Error: " + e.message);
+  }
+}
 function checkToken(){const hash=location.hash.substring(1),params=new URLSearchParams(hash),token=params.get("access_token");if(token){accessToken=token;history.replaceState(null,"",location.pathname);localStorage.setItem("pedro_token",token);localStorage.setItem("pedro_token_time",Date.now());return true;}const stored=localStorage.getItem("pedro_token"),st=parseInt(localStorage.getItem("pedro_token_time")||"0");if(stored&&Date.now()-st<3500000){accessToken=stored;return true;}return false;}
 async function buscarArchivo(){const res=await fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='"+FILE_NAME+"'&fields=files(id)",{headers:{Authorization:"Bearer "+accessToken}});const d=await res.json();return d.files&&d.files.length>0?d.files[0].id:null;}
 async function cargarDeDrive(){setSyncStatus("Buscando datos...");driveFileId=await buscarArchivo();if(!driveFileId){setSyncStatus("✅ Listo — sin historial previo","#5a9a5a");return;}const res=await fetch("https://www.googleapis.com/drive/v3/files/"+driveFileId+"?alt=media",{headers:{Authorization:"Bearer "+accessToken}});if(res.ok){const d=await res.json();APP=d;setSyncStatus("✅ Sincronizado con Drive","#5a9a5a");try{restaurarNotificaciones();}catch(e){}}}
