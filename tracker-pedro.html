@@ -572,7 +572,31 @@ function render(){
   document.getElementById("cal-list").innerHTML=eventos.map(ev=>{const pas=ev.dia<DIA_HOY,esH=ev.dia===DIA_HOY,fal=ev.dia>DIA_HOY?ev.dia-DIA_HOY:null,cEv=ev.tipo==="pago"?ev.items.map(it=>APP.creditos.find(c=>c.nombre===it.n)).filter(Boolean):[],pag=cEv.length>0&&cEv.every(c=>c&&c.pagado);return'<div class="cal-row" style="opacity:'+(pas?0.4:1)+'"><div class="cal-day'+(esH?" today":"")+(pag?" done":"")+'" style="'+(pag?"border-color:#1a4a1a":"")+'">'+(pag?"✅":ev.dia)+'</div><div class="cal-content">'+(esH?'<div style="font-size:9px;color:#7a6a1a;letter-spacing:2px;margin-bottom:3px">HOY</div>':"")+( fal!==null&&fal<=5?'<div style="font-size:9px;color:#f59e0b;margin-bottom:3px">en '+fal+" día"+(fal!==1?"s":"")+"</div>":"")+ev.items.map((it,j)=>'<div class="cal-item" style="'+(j===ev.items.length-1?"border-bottom:none":"")+'"><span style="color:'+(ev.tipo==="nomina"?"#5a9a5a":"#b8b89a")+'">'+it.n+'</span><span style="color:'+(ev.tipo==="nomina"?"#5a9a5a":"#e8d5a3")+';font-weight:bold">'+(ev.tipo==="nomina"?"+":"-")+fmt(it.v)+"</span></div>").join("")+"</div></div>";}).join("");
 }
 function buildCatGrid(){const g=document.getElementById("cat-grid");CATEGORIAS.forEach(cat=>{const b=document.createElement("button");b.className="cat-btn"+(cat.id===catSel?" sel":"");b.id="cat-"+cat.id;b.style.borderColor=cat.id===catSel?cat.color:"#2a2a3a";b.textContent=cat.label;b.onclick=()=>{catSel=cat.id;CATEGORIAS.forEach(c=>{const el=document.getElementById("cat-"+c.id);if(el){el.className="cat-btn"+(c.id===cat.id?" sel":"");el.style.borderColor=c.id===cat.id?c.color:"#2a2a3a";}});};g.appendChild(b);});}
-async function init(){buildCatGrid();if(checkToken()){document.getElementById("login-overlay").style.display="none";document.getElementById("app").style.display="block";render();await cargarDeDrive();render();}}
+async function init(){
+  buildCatGrid();
+  // Debug: mostrar hash en consola
+  console.log("Hash:", location.hash);
+  console.log("Search:", location.search);
+  // Intentar también desde search params por si el hash falla
+  if(location.search.includes('access_token')){
+    const p=new URLSearchParams(location.search.substring(1));
+    const t=p.get('access_token');
+    if(t){accessToken=t;localStorage.setItem("pedro_token",t);localStorage.setItem("pedro_token_time",Date.now());}
+  }
+  if(checkToken()){
+    document.getElementById("login-overlay").style.display="none";
+    document.getElementById("app").style.display="block";
+    render();
+    await cargarDeDrive();
+    render();
+  } else {
+    // Mostrar debug info en pantalla
+    const dbg = document.createElement('div');
+    dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#111;color:#888;font-size:10px;padding:4px 8px;z-index:9999';
+    dbg.textContent = 'URL: '+location.href.substring(0,80);
+    document.body.appendChild(dbg);
+  }
+}
 init();
 </script>
 </body>
