@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Control Financiero — Pedro Luis</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#080810; color:#e8d5a3; font-family:Georgia,serif; min-height:100vh; padding-bottom:80px; }
+  .header { background:#0d0d18; border-bottom:1px solid #1e1e2e; padding:12px 16px; position:sticky; top:0; z-index:100; display:flex; justify-content:space-between; align-items:center; }
+  .header-left .sub { font-size:9px; color:#5a5a7a; letter-spacing:3px; text-transform:uppercase; }
+  .header-left .name { font-size:15px; font-weight:bold; }
+  .header-right { text-align:right; }
+  .header-right .day { font-size:9px; color:#5a5a7a; }
+  .header-right .salary { font-size:16px; color:#5a9a5a; font-weight:bold; }
+  .sync-bar { background:#0a0a14; border-bottom:1px solid #1a1a2a; padding:5px 16px; display:flex; justify-content:space-between; align-items:center; font-size:11px; }
+  .sync-btn { background:#1a1a2a; border:1px solid #2a2a4a; border-radius:6px; padding:4px 10px; cursor:pointer; color:#6a6a9a; font-size:10px; font-family:Georgia,serif; }
+  .alerts { background:#140808; border-bottom:1px solid #3a1010; padding:6px 16px; display:none; }
+  .alert-row { display:flex; justify-content:space-between; font-size:11px; padding:3px 0; }
+  .tabs { background:#0d0d18; border-bottom:1px solid #1e1e2e; display:flex; overflow-x:auto; }
+  .tab-btn { background:none; border:none; cursor:pointer; padding:12px 16px; font-size:12px; color:#4a4a5a; border-bottom:2px solid transparent; white-space:nowrap; font-family:Georgia,serif; }
+  .tab-btn.active { color:#e8d5a3; border-bottom:2px solid #7a6a2a; }
+  .content { max-width:760px; margin:0 auto; padding:16px; }
+  .panel { display:none; }
+  .panel.active { display:block; }
+  .card { background:#0d0d18; border:1px solid #2a2a3a; border-radius:14px; padding:16px; margin-bottom:14px; }
+  .card-green { background:linear-gradient(135deg,#0d1a0d,#080f08); border:1px solid #1a3a1a; }
+  .label { font-size:9px; color:#5a5a7a; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px; }
+  .big-num { font-size:28px; font-weight:bold; }
+  .med-num { font-size:20px; font-weight:bold; }
+  .small-num { font-size:15px; font-weight:bold; }
+  .hint { font-size:11px; color:#5a5a7a; margin-top:4px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+  .mini-card { background:#0d0d18; border:1px solid #1e1e2e; border-radius:10px; padding:12px; text-align:center; }
+  input[type=number], input[type=text] { background:#12121e; border:1px solid #2a2a3a; border-radius:8px; padding:10px 12px; color:#e8d5a3; font-size:14px; width:100%; font-family:Georgia,serif; outline:none; }
+  input::placeholder { color:#3a3a5a; }
+  .btn { border:none; border-radius:8px; padding:10px 16px; cursor:pointer; font-size:13px; font-family:Georgia,serif; }
+  .btn-green { background:#1a3a1a; border:1px solid #2a5a2a; color:#5a9a5a; }
+  .btn-red { background:#2a1a1a; border:1px solid #4a2a2a; color:#8a5a5a; }
+  .btn-gray { background:#1a1a2a; border:1px solid #3a3a5a; color:#7a7a9a; }
+  .btn-sm { padding:5px 10px; font-size:11px; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #14141e; }
+  .row:last-child { border-bottom:none; }
+  .row-label { font-size:13px; color:#e8d5a3; }
+  .row-sub { font-size:10px; color:#4a4a6a; }
+  .row-val { font-size:13px; font-weight:bold; }
+  .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-right:8px; }
+  .dot-sq { width:7px; height:7px; border-radius:2px; flex-shrink:0; margin-right:5px; }
+  .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin:8px 0; }
+  .cat-btn { background:#0d0d18; border:1px solid #2a2a3a; border-radius:6px; padding:6px 2px; cursor:pointer; color:#5a5a7a; font-size:10px; text-align:center; font-family:Georgia,serif; }
+  .cat-btn.sel { background:#1e1e30; color:#e8d5a3; }
+  .tipo-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:8px 0; }
+  .tipo-btn { background:#0d0d18; border:1px solid #2a2a3a; border-radius:6px; padding:8px; cursor:pointer; color:#5a5a7a; font-size:12px; font-family:Georgia,serif; }
+  .tipo-btn.sel-e { background:#1e0d0d; border-color:#ef4444; color:#ef4444; }
+  .tipo-btn.sel-i { background:#0d1e0d; border-color:#22c55e; color:#22c55e; }
+  .day-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .day-cell { border-radius:5px; padding:4px 2px; text-align:center; border:1px solid #1a1a2a; background:#0a0a14; }
+  .day-cell.today { background:#1e1e0a; border-color:#5a5a1a; }
+  .day-cell.good { background:#0a1e0a; border-color:#1a4a1a; }
+  .day-cell.bad { background:#1e0a0a; border-color:#4a1a1a; }
+  .day-cell.future { opacity:0.2; }
+  .day-num { font-size:10px; color:#6a6a7a; }
+  .day-cell.today .day-num { color:#e8d5a3; font-weight:bold; }
+  .day-amt { font-size:8px; }
+  .credito-card { background:#0d0d18; border:1px solid #2a2a3a; border-radius:12px; padding:14px; margin-bottom:10px; border-left-width:4px; }
+  .credito-card.pagado { opacity:0.65; }
+  .credito-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .field-box { background:#080810; border-radius:8px; padding:10px; }
+  .field-lbl { font-size:9px; color:#5a5a7a; margin-bottom:3px; }
+  .field-input { background:none; border:none; font-size:15px; font-weight:bold; width:100%; outline:none; font-family:Georgia,serif; }
+  .cal-row { display:flex; gap:10px; margin-bottom:10px; }
+  .cal-day { width:42px; height:42px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; color:#5a5a7a; background:#0d0d18; border:2px solid #2a2a3a; }
+  .cal-day.today { background:#1e1e08; border-color:#7a6a1a; color:#e8d5a3; }
+  .cal-day.done { border-color:#1a4a1a; }
+  .cal-content { flex:1; background:#0d0d18; border:1px solid #1e1e2e; border-radius:10px; padding:10px; }
+  .cal-item { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; border-bottom:1px solid #14141e; }
+  .cal-item:last-child { border-bottom:none; }
+  .sep { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .form-box { background:#080810; border:1px solid #2a2a3a; border-radius:10px; padding:14px; margin-bottom:12px; }
+  .form-row { display:flex; gap:8px; margin-bottom:8px; }
+  .green { color:#22c55e; } .red { color:#ef4444; } .yellow { color:#f59e0b; } .blue { color:#06b6d4; }
+  .flex { display:flex; align-items:center; }
+  .del-btn { background:none; border:none; cursor:pointer; color:#4a2020; font-size:14px; padding:0 4px; }
+  #login-overlay { position:fixed; inset:0; background:#080810; z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; }
+  .login-card { background:#0d0d18; border:1px solid #2a2a3a; border-radius:20px; padding:32px 24px; width:100%; max-width:360px; text-align:center; }
+  .google-btn { background:#fff; border:none; border-radius:10px; padding:14px 20px; cursor:pointer; font-size:14px; font-family:Georgia,serif; color:#333; width:100%; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<div id="login-overlay">
+  <div class="login-card">
+    <div style="font-size:48px;margin-bottom:16px">💰</div>
+    <div style="font-size:20px;font-weight:bold;margin-bottom:6px">Control Financiero</div>
+    <div style="font-size:12px;color:#6a6a5a;margin-bottom:4px">Pedro Luis Nuñez Suarez</div>
+    <div style="font-size:13px;color:#5a5a7a;margin-bottom:28px;line-height:1.6">Tus datos se guardan en tu Google Drive de forma segura y privada.</div>
+    <button class="google-btn" id="google-login-btn" onclick="window.location.href='https://accounts.google.com/o/oauth2/auth?client_id=162171728521-ser3p41305ghmp3qhk91enhii1o7jfck.apps.googleusercontent.com&redirect_uri=https://pedroluisnunezsuarez10-pixel.github.io/Tracker/tracker-pedro.html&response_type=token&scope=https://www.googleapis.com/auth/drive.appdata&prompt=select_account';return false;" onmousedown="window.location.href='https://accounts.google.com/o/oauth2/auth?client_id=162171728521-ser3p41305ghmp3qhk91enhii1o7jfck.apps.googleusercontent.com&redirect_uri=https://pedroluisnunezsuarez10-pixel.github.io/Tracker/tracker-pedro.html&response_type=token&scope=https://www.googleapis.com/auth/drive.appdata&prompt=select_account'">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <div style="font-size:10px;color:#3a3a5a;margin-top:16px">Solo tú tienes acceso a tus datos</div>
+    <div id="login-fallback" style="margin-top:12px;text-align:center">
+      <a id="login-link" href="https://accounts.google.com/o/oauth2/auth?client_id=162171728521-ser3p41305ghmp3qhk91enhii1o7jfck.apps.googleusercontent.com&redirect_uri=https://pedroluisnunezsuarez10-pixel.github.io/Tracker/tracker-pedro.html&response_type=token&scope=https://www.googleapis.com/auth/drive.appdata&prompt=select_account" style="font-size:12px;color:#4a6a9a;text-decoration:underline">¿El botón no funciona? Toca aquí</a>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="header-left"><div class="sub">Control Financiero</div><div class="name">Pedro Luis Nuñez</div></div>
+    <div class="header-right"><div class="day" id="fecha-hoy"></div><div class="salary" id="header-saldo" style="cursor:pointer" title="Saldo aproximado actual">Cargando...</div></div>
+  </div>
+  <div id="header-hint" style="background:#080810;border-bottom:1px solid #14141e;padding:2px 16px;text-align:right;font-size:9px;color:#3a3a5a;display:none">≈ saldo después de movimientos de hoy</div>
+<div class="sync-bar">
+    <span id="sync-status" style="color:#4a4a6a;font-size:11px">Conectando...</span>
+    <button class="sync-btn" onclick="sincronizar()">↻ Sincronizar</button>
+  </div>
+  <div class="alerts" id="alerts-box"></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('cuenta',this)">💳 Cuenta</button>
+    <button class="tab-btn" onclick="showTab('caja',this)">📊 Caja</button>
+    <button class="tab-btn" onclick="showTab('creditos',this)">🏦 Créditos</button>
+    <button class="tab-btn" onclick="showTab('fechas',this)">📅 Fechas</button>
+  </div>
+  <div class="content">
+    <div id="panel-cuenta" class="panel active">
+      <div class="card card-green">
+        <div class="label">Saldo en Bancolombia ahora</div>
+        <div class="big-num" id="saldo-display" style="color:#3a5a3a">Sin registrar hoy</div>
+        <div class="hint" id="gasto-hoy-txt"></div>
+        <div class="hint" style="margin-top:4px" id="ahorro-txt"></div>
+      </div>
+      <div class="card">
+        <div class="label">Registrar saldo al final del día</div>
+        <div class="form-row" style="margin-top:8px">
+          <input type="number" id="input-saldo" placeholder="Saldo actual en Bancolombia">
+          <button class="btn btn-green" onclick="guardarSaldo()" style="white-space:nowrap;flex-shrink:0">Guardar</button>
+        </div>
+        <div class="hint">Presupuesto diario: <span class="yellow" style="font-weight:bold" id="presup-txt"></span></div>
+      </div>
+      <div class="grid3">
+        <div class="mini-card"><div class="label">Gastado hoy</div><div class="small-num" id="gasto-card">—</div></div>
+        <div class="mini-card"><div class="label">Límite/día</div><div class="small-num yellow" id="limite-card"></div></div>
+        <div class="mini-card"><div class="label">Ahorro acum.</div><div class="small-num" id="ahorro-card">$0</div></div>
+      </div>
+      <div class="card">
+        <div class="sep"><div class="label" style="margin:0">Movimientos del día</div><button class="btn btn-gray btn-sm" onclick="toggleMovForm()">+ Agregar</button></div>
+        <div id="mov-form" class="form-box" style="display:none">
+          <input type="text" id="mov-nota" placeholder="¿En qué? (almuerzo, bus...)" style="margin-bottom:8px">
+          <input type="number" id="mov-monto" placeholder="Monto en pesos" style="margin-bottom:8px">
+          <div class="cat-grid" id="cat-grid"></div>
+          <div class="tipo-grid">
+            <button class="tipo-btn sel-e" id="tipo-e" onclick="setTipo('egreso')">📤 Egreso</button>
+            <button class="tipo-btn" id="tipo-i" onclick="setTipo('ingreso')">📥 Ingreso</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-green" style="flex:1" onclick="agregarMov()">✅ Guardar</button>
+            <button class="btn btn-red" style="flex:1" onclick="toggleMovForm()">Cancelar</button>
+          </div>
+        </div>
+        <div id="movs-list"></div>
+      </div>
+      <div class="card"><div class="label">Historial de saldos</div><div id="historial-list"></div></div>
+
+      <!-- RESUMEN DIARIO -->
+      <div class="card" style="background:linear-gradient(135deg,#0d0d1a,#080810);border:1px solid #2a2a4a">
+        <div class="sep" style="margin-bottom:10px">
+          <div class="label" style="margin:0">📋 Resumen del día</div>
+          <span id="resumen-fecha" style="font-size:10px;color:#4a4a6a"></span>
+        </div>
+        <div id="resumen-diario"></div>
+      </div>
+
+      <!-- NOTIFICACIONES -->
+      <div class="card" style="background:#0d0a0d;border:1px solid #2a1a2a">
+        <div class="sep" style="margin-bottom:10px">
+          <div class="label" style="margin:0;color:#8a5a9a">🔔 Notificaciones</div>
+          <button class="btn btn-gray btn-sm" id="notif-btn" onclick="activarNotificaciones()">Activar</button>
+        </div>
+        <div id="notif-status" style="font-size:11px;color:#4a3a5a">Activa las notificaciones para recibir alertas de pagos y presupuesto.</div>
+        <div style="margin-top:10px" id="notif-config" style="display:none">
+          <div style="font-size:10px;color:#5a5a7a;margin-bottom:8px">Recibirás alertas cuando:</div>
+          <div style="font-size:11px;color:#7a7a9a;line-height:2">
+            🔴 Un pago vence mañana o hoy<br>
+            🟡 Llevas más del 80% del presupuesto diario<br>
+            🟢 El mercado se está agotando<br>
+            📋 Recordatorio de registrar saldo (9pm)
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="panel-caja" class="panel">
+      <div class="card card-green">
+        <div class="label">Estado Caja Menor</div>
+        <div class="grid2" style="margin-top:8px;margin-bottom:0">
+          <div><div style="font-size:11px;color:#5a7a5a">Presupuesto mes</div><div class="med-num">$1.008.790</div></div>
+          <div><div style="font-size:11px;color:#5a7a5a">Ahorro / Déficit</div><div class="med-num" id="caja-ahorro"></div></div>
+          <div><div style="font-size:11px;color:#5a7a5a">Ideal por día</div><div class="small-num yellow" id="caja-diario"></div></div>
+          <div><div style="font-size:11px;color:#5a7a5a">Días restantes</div><div class="small-num blue" id="caja-dias"></div></div>
+        </div>
+      </div>
+      <div class="card"><div class="label">Gasto diario — Marzo</div><div class="day-grid" style="margin-top:8px" id="day-cal"></div><div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:#5a5a7a"><span>🟢 Dentro límite</span><span>🔴 Excedido</span></div></div>
+      <div class="card"><div class="label">Por categoría (mes)</div><div id="cat-resumen"></div></div>
+
+      <!-- MÓDULO MERCADO -->
+      <div class="card" style="background:linear-gradient(135deg,#0d1a10,#080f0a);border:1px solid #1a3a20">
+        <div class="sep" style="margin-bottom:12px">
+          <div class="label" style="margin:0;color:#5a9a6a">🛒 Control de mercado</div>
+          <button class="btn btn-gray btn-sm" onclick="toggleMercadoForm()">+ Nuevo</button>
+        </div>
+        <div id="mercado-form" style="display:none;margin-bottom:12px">
+          <div style="font-size:11px;color:#5a7a5a;margin-bottom:6px">¿Cuánto gastaste en mercado?</div>
+          <input type="number" id="mercado-valor" placeholder="Ej: 250000" style="margin-bottom:8px">
+          <input type="text" id="mercado-nota" placeholder="Nota (ej: Éxito, mercado grande...)" style="margin-bottom:8px">
+          <button class="btn btn-green" style="width:100%" onclick="agregarMercado()">✅ Registrar mercado</button>
+        </div>
+        <div id="mercado-list"></div>
+      </div>
+    </div>
+    <div id="panel-creditos" class="panel">
+      <div class="grid2">
+        <div class="mini-card"><div class="label">Deuda total</div><div class="med-num red" id="total-deuda"></div></div>
+        <div class="mini-card"><div class="label">Cuotas mes</div><div class="med-num" style="color:#818cf8" id="total-cuotas"></div><div class="hint" id="pagados-txt"></div></div>
+      </div>
+      <div id="creditos-list"></div>
+      <div class="card" style="background:#0d1a0d;border-color:#1a3a1a"><div class="label" style="color:#5a8a5a">💡 Estrategia Avalancha</div><div style="font-size:12px;color:#7a8a7a;line-height:1.7;margin-top:6px">Aplica pagos extras primero a <strong style="color:#ef4444">ADDI 50%</strong> → <strong style="color:#a855f7">Nu 43%</strong> → <strong style="color:#ec4899">Bajo Monto 34%</strong></div></div>
+    </div>
+    <div id="panel-fechas" class="panel">
+      <div class="label">Calendario mensual recurrente</div>
+      <div id="cal-list" style="margin-top:8px"></div>
+      <div class="card" style="background:#14140a;border-color:#2a2a1a;margin-top:8px"><div class="label" style="color:#7a7a4a">Reserva pre-nómina</div><div style="font-size:12px;color:#7a7a5a;line-height:1.7;margin-top:6px">Día 22 aparta <strong style="color:#f59e0b">$1.828.349</strong> para pagos días 2, 3 y 10 del mes siguiente.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CLIENT_ID="162171728521-ser3p41305ghmp3qhk91enhii1o7jfck.apps.googleusercontent.com";
+const SCOPES="https://www.googleapis.com/auth/drive.appdata";
+const FILE_NAME="tracker-pedro-data.json";
+const PRESUPUESTO_CAJA=1008790,DIAS_MES=31,PRESUPUESTO_DIARIO=Math.round(PRESUPUESTO_CAJA/DIAS_MES);
+const HOY=new Date(),DIA_HOY=HOY.getDate(),HOY_KEY=HOY.toISOString().split("T")[0];
+const AYER=new Date(HOY);AYER.setDate(AYER.getDate()-1);const AYER_KEY=AYER.toISOString().split("T")[0];
+const CATEGORIAS=[{id:"caja",label:"🏠 Casa",color:"#22c55e"},{id:"credito",label:"🏦 Crédito",color:"#818cf8"},{id:"familia",label:"👨‍👩‍👧 Familia",color:"#f59e0b"},{id:"disfrute",label:"🎉 Disfrute",color:"#ec4899"},{id:"factura",label:"🧾 Factura",color:"#06b6d4"},{id:"arriendo",label:"🏘️ Arriendo",color:"#a855f7"},{id:"otro",label:"📦 Otro",color:"#6b7280"}];
+const CREDITOS_INIT=[{id:1,nombre:"Bancolombia Consumo",deuda:59364836,cuota:1850443,tasa:21.69,diaPago:12,color:"#22c55e",pagado:false},{id:2,nombre:"Mastercard *6440",deuda:15911179,cuota:1300000,tasa:25.18,diaPago:2,color:"#f59e0b",pagado:true},{id:3,nombre:"ADDI Joyería",deuda:2570158,cuota:229842,tasa:50.00,diaPago:2,color:"#ef4444",pagado:true},{id:4,nombre:"Nu Préstamo",deuda:4882029,cuota:298507,tasa:43.29,diaPago:3,color:"#a855f7",pagado:true},{id:5,nombre:"Nu Tarjeta (esposa)",deuda:1007018,cuota:54240,tasa:43.29,diaPago:18,color:"#8b5cf6",pagado:false},{id:6,nombre:"Visa *0924 (esposa)",deuda:227059,cuota:75219,tasa:25.00,diaPago:16,color:"#06b6d4",pagado:false},{id:7,nombre:"Crédito Bajo Monto",deuda:3068000,cuota:195000,tasa:34.49,diaPago:10,color:"#ec4899",pagado:false}];
+let APP={creditos:CREDITOS_INIT,saldos:{},movimientos:[],ahorroAcumulado:0};
+let accessToken=null,driveFileId=null,catSel="caja",tipoMov="egreso",syncTimer=null;
+const fmt=n=>"$"+Math.abs(Math.round(n)).toLocaleString("es-CO");
+const fmtS=n=>{const a=Math.abs(n),s=n<0?"-":"";return a>=1e6?s+"$"+(a/1e6).toFixed(1)+"M":a>=1e3?s+"$"+(a/1e3).toFixed(0)+"K":s+"$"+a;};
+function calcAhorro(s){let ac=0;const ks=Object.keys(s).sort();for(let i=1;i<ks.length;i++){const s1=s[ks[i-1]],s2=s[ks[i]];if(s1!==undefined&&s2!==undefined)ac+=PRESUPUESTO_DIARIO-Math.max(0,s1-s2);}return ac;}
+function setSyncStatus(m,c="#4a4a6a"){const el=document.getElementById("sync-status");if(el){el.textContent=m;el.style.color=c;}}
+function iniciarSesion(){
+  try {
+    const base = location.href.split("?")[0].split("#")[0];
+    const p = new URLSearchParams({
+      client_id: CLIENT_ID,
+      redirect_uri: base,
+      response_type: "token",
+      scope: SCOPES,
+      prompt: "select_account"
+    });
+    const url = "https://accounts.google.com/o/oauth2/auth?" + p.toString();
+    window.location.assign(url);
+  } catch(e) {
+    alert("Error: " + e.message);
+  }
+}
+function checkToken(){const hash=location.hash.substring(1),params=new URLSearchParams(hash),token=params.get("access_token");if(token){accessToken=token;history.replaceState(null,"",location.pathname);localStorage.setItem("pedro_token",token);localStorage.setItem("pedro_token_time",Date.now());return true;}const stored=localStorage.getItem("pedro_token"),st=parseInt(localStorage.getItem("pedro_token_time")||"0");if(stored&&Date.now()-st<3500000){accessToken=stored;return true;}return false;}
+async function buscarArchivo(){const res=await fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='"+FILE_NAME+"'&fields=files(id)",{headers:{Authorization:"Bearer "+accessToken}});const d=await res.json();return d.files&&d.files.length>0?d.files[0].id:null;}
+async function cargarDeDrive(){setSyncStatus("Buscando datos...");driveFileId=await buscarArchivo();if(!driveFileId){setSyncStatus("✅ Listo — sin historial previo","#5a9a5a");return;}const res=await fetch("https://www.googleapis.com/drive/v3/files/"+driveFileId+"?alt=media",{headers:{Authorization:"Bearer "+accessToken}});if(res.ok){const d=await res.json();APP=d;setSyncStatus("✅ Sincronizado con Drive","#5a9a5a");try{restaurarNotificaciones();}catch(e){}}}
+async function guardarEnDrive(){setSyncStatus("Guardando...","#f59e0b");const content=JSON.stringify(APP);if(!driveFileId){const b="-------tb",meta=JSON.stringify({name:FILE_NAME,parents:["appDataFolder"]}),body=`--${b}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${b}--`;const res=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{Authorization:"Bearer "+accessToken,"Content-Type":`multipart/related; boundary="${b}"`},body});if(res.ok){const d=await res.json();driveFileId=d.id;}}else{await fetch("https://www.googleapis.com/upload/drive/v3/files/"+driveFileId+"?uploadType=media",{method:"PATCH",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:content});}setSyncStatus("✅ Guardado — "+new Date().toLocaleTimeString("es-CO"),"#5a9a5a");}
+async function sincronizar(){if(!accessToken)return;await cargarDeDrive();render();}
+function programarGuardado(){if(syncTimer)clearTimeout(syncTimer);syncTimer=setTimeout(guardarEnDrive,2000);}
+function guardarSaldo(){const val=parseInt(document.getElementById("input-saldo").value);if(isNaN(val))return;APP.saldos[HOY_KEY]=val;APP.ahorroAcumulado=calcAhorro(APP.saldos);document.getElementById("input-saldo").value="";programarGuardado();render();}
+function agregarMov(){const nota=document.getElementById("mov-nota").value.trim(),monto=parseInt(document.getElementById("mov-monto").value);if(!nota||isNaN(monto))return;APP.movimientos.push({id:Date.now(),fecha:HOY_KEY,dia:DIA_HOY,monto,categoria:catSel,nota,tipo:tipoMov});document.getElementById("mov-nota").value="";document.getElementById("mov-monto").value="";document.getElementById("mov-form").style.display="none";programarGuardado();render();}
+function eliminarMov(id){APP.movimientos=APP.movimientos.filter(m=>m.id!==id);programarGuardado();render();}
+function togglePagado(id){
+  const credito = APP.creditos.find(c=>c.id===id);
+  if(!credito) return;
+  if(!credito.pagado){
+    // Marcar como pagado — preguntar monto
+    const modal = document.createElement('div');
+    modal.id = 'modal-pago';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML = `
+      <div style="background:#0d0d18;border:1px solid #2a2a3a;border-radius:16px;padding:20px;width:100%;max-width:340px">
+        <div style="font-size:9px;color:#5a5a7a;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Registrar pago</div>
+        <div style="font-size:15px;font-weight:bold;margin-bottom:4px">${credito.nombre}</div>
+        <div style="font-size:11px;color:#5a5a7a;margin-bottom:16px">Cuota sugerida: <strong style="color:#e8d5a3">${fmt(credito.cuota)}</strong></div>
+        <div style="font-size:11px;color:#5a5a7a;margin-bottom:6px">¿Cuánto pagaste?</div>
+        <input type="number" id="modal-monto" value="${credito.cuota}" style="background:#12121e;border:1px solid #2a2a3a;border-radius:8px;padding:10px 12px;color:#e8d5a3;font-size:16px;width:100%;font-family:Georgia,serif;outline:none;margin-bottom:12px">
+        <div style="display:flex;gap:8px">
+          <button onclick="confirmarPago(${id})" style="flex:1;background:#1a3a1a;border:1px solid #2a5a2a;color:#5a9a5a;border-radius:8px;padding:12px;cursor:pointer;font-size:14px;font-family:Georgia,serif">✅ Confirmar</button>
+          <button onclick="document.getElementById('modal-pago').remove()" style="flex:1;background:#1a1a2a;border:1px solid #3a3a5a;color:#7a7a9a;border-radius:8px;padding:12px;cursor:pointer;font-size:14px;font-family:Georgia,serif">Cancelar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    setTimeout(()=>document.getElementById('modal-monto').select(),100);
+  } else {
+    // Desmarcar como pagado
+    APP.creditos = APP.creditos.map(c=>c.id===id?{...c,pagado:false}:c);
+    programarGuardado();
+    render();
+  }
+}
+function confirmarPago(id){
+  const monto = parseInt(document.getElementById('modal-monto').value);
+  if(isNaN(monto)||monto<=0) return;
+  // Restar del saldo
+  APP.creditos = APP.creditos.map(c=>c.id===id?{...c,pagado:true,deuda:Math.max(0,c.deuda-monto)}:c);
+  // Registrar en historial de pagos
+  if(!APP.pagos) APP.pagos=[];
+  APP.pagos.push({id:Date.now(),creditoId:id,monto,fecha:HOY_KEY});
+  document.getElementById('modal-pago').remove();
+  programarGuardado();
+  render();
+  if(typeof renderDeuda==='function') renderDeuda();
+  if(typeof renderMercado==='function') renderMercado();
+}
+function actualizarDeuda(id,val){const v=parseInt(val);if(!isNaN(v)){APP.creditos=APP.creditos.map(c=>c.id===id?{...c,deuda:v}:c);programarGuardado();}}
+
+
+// ===== RESUMEN DIARIO =====
+function renderResumenDiario(){
+  const el=document.getElementById('resumen-diario');
+  const fEl=document.getElementById('resumen-fecha');
+  if(!el) return;
+  const movsHoy=APP.movimientos.filter(m=>m.fecha===HOY_KEY);
+  if(fEl) fEl.textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+  if(movsHoy.length===0){
+    el.innerHTML='<div style="text-align:center;color:#3a3a5a;font-size:12px;padding:12px">Sin movimientos registrados hoy</div>';
+    return;
+  }
+  const totalEgreso=movsHoy.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.monto,0);
+  const totalIngreso=movsHoy.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0);
+  const porCat={};
+  movsHoy.forEach(m=>{
+    if(!porCat[m.categoria]) porCat[m.categoria]={label:'',color:'',total:0,items:[]};
+    const cat=CATEGORIAS.find(c=>c.id===m.categoria)||{label:'Otro',color:'#6b7280'};
+    porCat[m.categoria].label=cat.label;
+    porCat[m.categoria].color=cat.color;
+    porCat[m.categoria].total+=(m.tipo==='egreso'?m.monto:-m.monto);
+    porCat[m.categoria].items.push(m);
+  });
+  const ok=totalEgreso<=PRESUPUESTO_DIARIO;
+  const diff=Math.abs(totalEgreso-PRESUPUESTO_DIARIO);
+  let html=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:#0a0a14;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:#5a5a7a;margin-bottom:4px">TOTAL GASTADO</div>
+        <div style="font-size:16px;font-weight:bold;color:#ef4444">${fmt(totalEgreso)}</div>
+      </div>
+      <div style="background:#0a0a14;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:#5a5a7a;margin-bottom:4px">${ok?'AHORRASTE':'EXCEDISTE'}</div>
+        <div style="font-size:16px;font-weight:bold;color:${ok?'#22c55e':'#ef4444'}">${ok?'+':'- '}${fmt(diff)}</div>
+      </div>
+    </div>
+    ${totalIngreso>0?`<div style="background:#0a140a;border-radius:8px;padding:8px;text-align:center;margin-bottom:10px;font-size:12px;color:#5a9a5a">📥 Ingresos del día: <strong>+${fmt(totalIngreso)}</strong></div>`:''}
+    <div style="font-size:9px;color:#5a5a7a;margin-bottom:8px;letter-spacing:2px">POR CATEGORÍA</div>`;
+  
+  Object.values(porCat).sort((a,b)=>b.total-a.total).forEach(cat=>{
+    const pct=Math.min(100,Math.round((Math.abs(cat.total)/PRESUPUESTO_DIARIO)*100));
+    html+=`<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px">${cat.label}</span>
+        <span style="font-size:12px;font-weight:bold;color:${cat.total>0?'#ef4444':'#22c55e'}">${cat.total>0?'-':'+'}${fmt(Math.abs(cat.total))}</span>
+      </div>
+      <div style="background:#14141e;border-radius:4px;overflow:hidden;height:5px">
+        <div style="height:100%;width:${pct}%;background:${cat.color};border-radius:4px"></div>
+      </div>
+      <div style="margin-top:4px">${cat.items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:10px;color:#4a4a6a;padding:2px 0"><span>${i.nota}</span><span>${i.tipo==='egreso'?'-':'+'}${fmt(i.monto)}</span></div>`).join('')}</div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ===== NOTIFICACIONES =====
+let notifInterval=null;
+function activarNotificaciones(){
+  if(!('Notification' in window)){
+    document.getElementById('notif-status').textContent='Tu navegador no soporta notificaciones. Usa Chrome.';
+    return;
+  }
+  Notification.requestPermission().then(perm=>{
+    if(perm==='granted'){
+      document.getElementById('notif-status').innerHTML='✅ <span style="color:#5a9a5a">Notificaciones activadas</span>';
+      document.getElementById('notif-btn').textContent='✅ Activo';
+      document.getElementById('notif-btn').style.color='#5a9a5a';
+      document.getElementById('notif-config').style.display='block';
+      APP.notifActivas=true;
+      programarGuardado();
+      verificarAlertas();
+      if(notifInterval) clearInterval(notifInterval);
+      notifInterval=setInterval(verificarAlertas,60*60*1000); // cada hora
+    } else {
+      document.getElementById('notif-status').textContent='Permiso denegado. Actívalo en configuración de Chrome.';
+    }
+  });
+}
+
+function enviarNotif(titulo,cuerpo,icono){
+  if(Notification.permission==='granted'){
+    new Notification(titulo,{body:cuerpo,icon:icono||'💰'});
+  }
+}
+
+function verificarAlertas(){
+  if(!APP.notifActivas || Notification.permission!=='granted') return;
+  const ahora=new Date();
+  const hora=ahora.getHours();
+  
+  // 1. Pagos que vencen hoy o mañana
+  APP.creditos.forEach(c=>{
+    if(c.pagado) return;
+    const diasFalta=c.diaPago>=DIA_HOY?c.diaPago-DIA_HOY:30-DIA_HOY+c.diaPago;
+    if(diasFalta===0) enviarNotif('⚠️ Pago vence HOY',''+c.nombre+' — '+fmt(c.cuota),'');
+    if(diasFalta===1) enviarNotif('🔔 Pago mañana',''+c.nombre+' — '+fmt(c.cuota),'');
+  });
+
+  // 2. Presupuesto diario excedido
+  const movsHoy=APP.movimientos.filter(m=>m.fecha===HOY_KEY&&m.tipo==='egreso');
+  const gastado=movsHoy.reduce((s,m)=>s+m.monto,0);
+  if(gastado>PRESUPUESTO_DIARIO) enviarNotif('🔴 Presupuesto excedido','Llevas '+fmt(gastado)+' de '+fmt(PRESUPUESTO_DIARIO)+' hoy','');
+  else if(gastado>PRESUPUESTO_DIARIO*0.8) enviarNotif('🟡 Casi al límite diario','Llevas '+fmt(gastado)+' — límite '+fmt(PRESUPUESTO_DIARIO),'');
+
+  // 3. Mercado agotándose
+  (APP.mercados||[]).forEach(m=>{
+    const diasDura=Math.floor(m.valor/PRESUPUESTO_DIARIO);
+    const inicio=new Date(m.fecha+'T12:00:00');
+    const diasPasados=Math.floor((ahora-inicio)/(1000*60*60*24));
+    const diasRestantes=diasDura-diasPasados;
+    if(diasRestantes===1) enviarNotif('🛒 Mercado casi agotado',m.nota+' — queda 1 día','');
+    if(diasRestantes===0) enviarNotif('🛒 Mercado agotado',m.nota+' ya debería estar terminado','');
+  });
+
+  // 4. Recordatorio 9pm registrar saldo
+  if(hora===21){
+    const sH=APP.saldos[HOY_KEY];
+    if(sH===undefined) enviarNotif('📋 Registra tu saldo','No olvides registrar cuánto tienes en Bancolombia hoy','');
+  }
+}
+
+// Restaurar estado notificaciones al cargar
+function restaurarNotificaciones(){
+  if(APP.notifActivas && Notification.permission==='granted'){
+    document.getElementById('notif-status').innerHTML='✅ <span style="color:#5a9a5a">Notificaciones activadas</span>';
+    document.getElementById('notif-btn').textContent='✅ Activo';
+    document.getElementById('notif-config').style.display='block';
+    if(notifInterval) clearInterval(notifInterval);
+    notifInterval=setInterval(verificarAlertas,60*60*1000);
+  }
+}
+
+function toggleMercadoForm(){const f=document.getElementById('mercado-form');f.style.display=f.style.display==='none'?'block':'none';}
+function agregarMercado(){
+  const valor=parseInt(document.getElementById('mercado-valor').value);
+  const nota=document.getElementById('mercado-nota').value.trim()||'Mercado';
+  if(isNaN(valor)||valor<=0)return;
+  if(!APP.mercados)APP.mercados=[];
+  APP.mercados.push({id:Date.now(),valor,nota,fecha:HOY_KEY});
+  document.getElementById('mercado-valor').value='';
+  document.getElementById('mercado-nota').value='';
+  document.getElementById('mercado-form').style.display='none';
+  programarGuardado();
+  renderMercado();
+}
+function eliminarMercado(id){APP.mercados=(APP.mercados||[]).filter(m=>m.id!==id);programarGuardado();renderMercado();}
+function renderMercado(){
+  const el=document.getElementById('mercado-list');
+  if(!el)return;
+  const mercados=(APP.mercados||[]).slice().reverse();
+  if(mercados.length===0){el.innerHTML='<div style="text-align:center;color:#3a5a3a;font-size:12px;padding:12px">Sin mercados registrados</div>';return;}
+  el.innerHTML=mercados.map(m=>{
+    const diasDura=Math.floor(m.valor/PRESUPUESTO_DIARIO);
+    const inicio=new Date(m.fecha+'T12:00:00');
+    const fin=new Date(inicio);fin.setDate(fin.getDate()+diasDura);
+    const hoy=new Date(HOY_KEY+'T12:00:00');
+    const diasPasados=Math.max(0,Math.floor((hoy-inicio)/(1000*60*60*24)));
+    const diasRestantes=Math.max(0,diasDura-diasPasados);
+    const valorRestante=Math.max(0,m.valor-(diasPasados*PRESUPUESTO_DIARIO));
+    const pct=Math.min(100,Math.round((diasPasados/diasDura)*100));
+    const agotado=diasRestantes===0;
+    const finStr=fin.toLocaleDateString('es-CO',{day:'numeric',month:'short'});
+    const color=agotado?'#ef4444':pct>70?'#f59e0b':'#22c55e';
+    return \`<div style="background:#080f08;border:1px solid #1a2a1a;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:bold">\${m.nota}</div>
+          <div style="font-size:10px;color:#5a7a5a">\${m.fecha} · dura \${diasDura} días (hasta \${finStr})</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="text-align:right">
+            <div style="font-size:14px;color:#5a9a6a;font-weight:bold">\${fmt(m.valor)}</div>
+          </div>
+          <button onclick="eliminarMercado(\${m.id})" style="background:none;border:none;cursor:pointer;color:#4a2020;font-size:14px">✕</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:#0d180d;border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:#5a7a5a;margin-bottom:2px">DÍAS PASADOS</div>
+          <div style="font-size:14px;color:#e8d5a3;font-weight:bold">\${diasPasados}</div>
+        </div>
+        <div style="background:#0d180d;border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:#5a7a5a;margin-bottom:2px">DÍAS RESTANTES</div>
+          <div style="font-size:14px;color:\${color};font-weight:bold">\${agotado?'⚠️ 0':diasRestantes}</div>
+        </div>
+        <div style="background:#0d180d;border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:9px;color:#5a7a5a;margin-bottom:2px">VALOR RESTANTE</div>
+          <div style="font-size:12px;color:\${color};font-weight:bold">\${fmt(valorRestante)}</div>
+        </div>
+      </div>
+      <div style="background:#0a0f0a;border-radius:6px;overflow:hidden;height:8px">
+        <div style="height:100%;width:\${pct}%;background:\${color};border-radius:6px;transition:width 0.5s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#3a5a3a;margin-top:4px">
+        <span>Inicio</span>
+        <span>\${pct}% consumido</span>
+        <span>Fin \${finStr}</span>
+      </div>
+      \${agotado?'<div style="text-align:center;font-size:11px;color:#ef4444;margin-top:8px;font-weight:bold">⚠️ Este mercado ya debería estar agotado</div>':''}
+    </div>\`;
+  }).join('');
+  try{renderMercado();}catch(e){}
+  try{renderResumenDiario();}catch(e){}
+}
+
+function actualizarCuota(id,val){const v=parseInt(val);if(!isNaN(v)){APP.creditos=APP.creditos.map(c=>c.id===id?{...c,cuota:v}:c);programarGuardado();}}
+function toggleMovForm(){const f=document.getElementById("mov-form");f.style.display=f.style.display==="none"?"block":"none";}
+function setTipo(t){tipoMov=t;document.getElementById("tipo-e").className="tipo-btn"+(t==="egreso"?" sel-e":"");document.getElementById("tipo-i").className="tipo-btn"+(t==="ingreso"?" sel-i":"");}
+function showTab(id,btn){document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById("panel-"+id).classList.add("active");btn.classList.add("active");render();}
+function render(){
+  const sH=APP.saldos[HOY_KEY]??null,sA=APP.saldos[AYER_KEY]??null,gH=sH!==null&&sA!==null?Math.max(0,sA-sH):null,ahorro=APP.ahorroAcumulado||0;
+  document.getElementById("fecha-hoy").textContent="Día "+DIA_HOY+" · Marzo 2026";
+  document.getElementById("presup-txt").textContent=fmt(PRESUPUESTO_DIARIO);
+  document.getElementById("limite-card").textContent=fmt(PRESUPUESTO_DIARIO);
+  document.getElementById("caja-diario").textContent=fmt(PRESUPUESTO_DIARIO);
+  document.getElementById("caja-dias").textContent=DIAS_MES-DIA_HOY;
+  const alBox=document.getElementById("alerts-box");
+  const alertas=APP.creditos.filter(c=>{if(c.pagado)return false;const d=c.diaPago>=DIA_HOY?c.diaPago-DIA_HOY:30-DIA_HOY+c.diaPago;return d<=5;});
+  alBox.style.display=alertas.length?"block":"none";
+  alBox.innerHTML=alertas.map(a=>{const d=a.diaPago>=DIA_HOY?a.diaPago-DIA_HOY:30-DIA_HOY+a.diaPago;return'<div class="alert-row"><span style="color:'+(d===0?"#ef4444":"#f59e0b")+'">'+(d===0?"⚠️":"🔔")+" "+a.nombre+" — "+(d===0?"¡HOY!":"en "+d+" días")+"</span><span style=\"color:#ef4444\">"+fmt(a.cuota)+"</span></div>";}).join("");
+  const sd=document.getElementById("saldo-display");sd.textContent=sH!==null?fmt(sH):"Sin registrar hoy";sd.style.color=sH!==null?"#6adf6a":"#3a5a3a";
+  // Calcular saldo aproximado en tiempo real
+  if(sH!==null){
+    const movsHoy=APP.movimientos.filter(m=>m.fecha===HOY_KEY);
+    const gastadoHoy=movsHoy.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.monto,0);
+    const ingresadoHoy=movsHoy.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.monto,0);
+    // Saldo aproximado = saldo guardado + ingresos de hoy - gastos de hoy registrados después del saldo
+    const saldoAprox = sH + ingresadoHoy - gastadoHoy;
+    const hEl=document.getElementById('header-saldo');
+    if(hEl){hEl.textContent=fmt(saldoAprox);hEl.style.color=saldoAprox>500000?'#5a9a5a':saldoAprox>200000?'#f59e0b':'#ef4444';}
+  } else {
+    const hEl=document.getElementById('header-saldo');
+    if(hEl){hEl.textContent='Sin saldo hoy';hEl.style.color='#3a5a3a';}
+  }
+  const gt=document.getElementById("gasto-hoy-txt");if(gH!==null){const ok=gH<=PRESUPUESTO_DIARIO;gt.innerHTML="Gasto hoy: <strong style=\"color:"+(ok?"#22c55e":"#ef4444")+"\">"+fmt(gH)+"</strong> ("+(ok?"ahorras "+fmt(PRESUPUESTO_DIARIO-gH):"excedes "+fmt(gH-PRESUPUESTO_DIARIO))+")";}else gt.textContent="";
+  document.getElementById("ahorro-txt").innerHTML=ahorro!==0?"<span style=\"color:"+(ahorro>0?"#5a9a5a":"#ef4444")+"\">"+( ahorro>0?"✅ Ahorro: +":"⚠️ Déficit: -")+fmt(Math.abs(ahorro))+"</span>":"";
+  const gc=document.getElementById("gasto-card");gc.textContent=gH!==null?fmtS(gH):"—";gc.style.color=gH!==null?(gH<=PRESUPUESTO_DIARIO?"#22c55e":"#ef4444"):"#5a5a7a";
+  const ac=document.getElementById("ahorro-card");ac.textContent=(ahorro>=0?"+":"")+fmtS(ahorro);ac.style.color=ahorro>=0?"#22c55e":"#ef4444";
+  const mH=APP.movimientos.filter(m=>m.fecha===HOY_KEY);
+  document.getElementById("movs-list").innerHTML=mH.length===0?'<div style="text-align:center;color:#3a3a5a;padding:16px;font-size:13px">Sin movimientos hoy</div>':[...mH].reverse().map(m=>{const cat=CATEGORIAS.find(c=>c.id===m.categoria)||CATEGORIAS[6];return'<div class="row"><div class="flex"><div class="dot" style="background:'+cat.color+'"></div><div><div class="row-label">'+m.nota+'</div><div class="row-sub">'+cat.label+'</div></div></div><div class="flex" style="gap:8px"><span class="row-val" style="color:'+(m.tipo==="egreso"?"#ef4444":"#22c55e")+'">'+(m.tipo==="egreso"?"-":"+")+fmt(m.monto)+'</span><button class="del-btn" onclick="eliminarMov('+m.id+')">✕</button></div></div>';}).join("");
+  const ks=Object.keys(APP.saldos).sort().reverse().slice(0,10),allKs=Object.keys(APP.saldos).sort();
+  document.getElementById("historial-list").innerHTML=ks.length===0?'<div style="color:#3a3a5a;font-size:12px;padding:8px 0">Sin historial aún</div>':ks.map(k=>{const idx=allKs.indexOf(k),prev=idx>0?allKs[idx-1]:null,s=APP.saldos[k],sp=prev?APP.saldos[prev]:null,g=sp!=null?Math.max(0,sp-s):null,ad=g!==null?PRESUPUESTO_DIARIO-g:null,dia=parseInt(k.split("-")[2]);return'<div class="row"><div><div class="row-label">Día '+dia+'</div>'+(g!==null?'<div class="row-sub" style="color:'+(ad>=0?"#5a9a5a":"#ef4444")+'">Gasto: '+fmt(g)+" · "+(ad>=0?"Ahorro: +"+fmt(ad):"Exceso: -"+fmt(Math.abs(ad)))+"</div>":"")+"</div><div class=\"row-val green\">"+fmt(s)+"</div></div>";}).join("");
+  document.getElementById("caja-ahorro").textContent=(ahorro>=0?"+":"")+fmtS(ahorro);document.getElementById("caja-ahorro").style.color=ahorro>=0?"#22c55e":"#ef4444";
+  document.getElementById("day-cal").innerHTML=Array.from({length:DIAS_MES},(_,i)=>i+1).map(dia=>{const k="2026-03-"+String(dia).padStart(2,"0"),pk="2026-03-"+String(dia-1).padStart(2,"0"),s=APP.saldos[k],sp=APP.saldos[pk],g=s!==undefined&&sp!==undefined?Math.max(0,sp-s):null,ad=g!==null?PRESUPUESTO_DIARIO-g:null,fut=dia>DIA_HOY,es=dia===DIA_HOY;let cls="day-cell";if(es)cls+=" today";else if(g!==null)cls+=ad>=0?" good":" bad";if(fut)cls+=" future";return'<div class="'+cls+'"><div class="day-num">'+dia+"</div>"+(g!==null?'<div class="day-amt" style="color:'+(ad>=0?"#22c55e":"#ef4444")+'">'+fmtS(g)+"</div>":"")+"</div>";}).join("");
+  const catT=CATEGORIAS.map(c=>({...c,total:APP.movimientos.filter(m=>m.categoria===c.id&&m.tipo==="egreso").reduce((s,m)=>s+m.monto,0)})).filter(c=>c.total>0);
+  document.getElementById("cat-resumen").innerHTML=catT.length===0?'<div style="color:#3a3a5a;font-size:12px;padding:8px 0">Sin movimientos</div>':catT.map(c=>'<div class="row"><div class="flex"><div class="dot-sq" style="background:'+c.color+'"></div><span style="font-size:13px;color:#c8c8a8">'+c.label+"</span></div><span class=\"row-val\">"+fmt(c.total)+"</span></div>").join("");
+  const td=APP.creditos.reduce((s,c)=>s+c.deuda,0),tc=APP.creditos.reduce((s,c)=>s+c.cuota,0),cp=APP.creditos.filter(c=>c.pagado).length;
+  document.getElementById("total-deuda").textContent=fmtS(td);document.getElementById("total-cuotas").textContent=fmtS(tc);document.getElementById("pagados-txt").textContent=cp+"/"+APP.creditos.length+" pagados";
+  document.getElementById("creditos-list").innerHTML=[...APP.creditos].sort((a,b)=>b.tasa-a.tasa).map(c=>'<div class="credito-card'+(c.pagado?" pagado":"")+'" style="border-left-color:'+c.color+(c.pagado?";border-color:#1a3a1a":"")+'">'+'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="font-size:14px;font-weight:bold">'+c.nombre+'</div><div style="font-size:11px;color:'+(c.tasa>=40?"#ef4444":c.tasa>=25?"#f59e0b":"#22c55e")+';margin-top:2px">'+c.tasa+'% E.A. · Día '+c.diaPago+'</div></div><button class="btn btn-sm '+(c.pagado?"btn-green":"btn-gray")+'" onclick="togglePagado('+c.id+')">'+(c.pagado?"✅ Pagado":"Marcar pagado")+'</button></div><div class="credito-fields"><div class="field-box"><div class="field-lbl">DEUDA ✏️</div><input class="field-input" style="color:#ef4444" type="number" value="'+c.deuda+'" onblur="actualizarDeuda('+c.id+',this.value)"></div><div class="field-box"><div class="field-lbl">CUOTA ✏️</div><input class="field-input" style="color:#e8d5a3" type="number" value="'+c.cuota+'" onblur="actualizarCuota('+c.id+',this.value)"></div></div></div>').join("");
+  const eventos=[{dia:2,items:[{n:"Mastercard *6440",v:1300000},{n:"ADDI Joyería",v:229842}],tipo:"pago"},{dia:3,items:[{n:"Nu Préstamo",v:298507}],tipo:"pago"},{dia:10,items:[{n:"Crédito Bajo Monto",v:195000}],tipo:"pago"},{dia:12,items:[{n:"Bancolombia Consumo",v:1850443}],tipo:"pago"},{dia:16,items:[{n:"Visa *0924 esposa",v:75219},{n:"Claro línea 1",v:51155}],tipo:"pago"},{dia:18,items:[{n:"Nu Tarjeta esposa",v:54240}],tipo:"pago"},{dia:22,items:[{n:"NÓMINA",v:8822211}],tipo:"nomina"},{dia:23,items:[{n:"Familia",v:1650000},{n:"Arriendo",v:1700000},{n:"Claro línea 2",v:109015}],tipo:"gasto"}];
+  document.getElementById("cal-list").innerHTML=eventos.map(ev=>{const pas=ev.dia<DIA_HOY,esH=ev.dia===DIA_HOY,fal=ev.dia>DIA_HOY?ev.dia-DIA_HOY:null,cEv=ev.tipo==="pago"?ev.items.map(it=>APP.creditos.find(c=>c.nombre===it.n)).filter(Boolean):[],pag=cEv.length>0&&cEv.every(c=>c&&c.pagado);return'<div class="cal-row" style="opacity:'+(pas?0.4:1)+'"><div class="cal-day'+(esH?" today":"")+(pag?" done":"")+'" style="'+(pag?"border-color:#1a4a1a":"")+'">'+(pag?"✅":ev.dia)+'</div><div class="cal-content">'+(esH?'<div style="font-size:9px;color:#7a6a1a;letter-spacing:2px;margin-bottom:3px">HOY</div>':"")+( fal!==null&&fal<=5?'<div style="font-size:9px;color:#f59e0b;margin-bottom:3px">en '+fal+" día"+(fal!==1?"s":"")+"</div>":"")+ev.items.map((it,j)=>'<div class="cal-item" style="'+(j===ev.items.length-1?"border-bottom:none":"")+'"><span style="color:'+(ev.tipo==="nomina"?"#5a9a5a":"#b8b89a")+'">'+it.n+'</span><span style="color:'+(ev.tipo==="nomina"?"#5a9a5a":"#e8d5a3")+';font-weight:bold">'+(ev.tipo==="nomina"?"+":"-")+fmt(it.v)+"</span></div>").join("")+"</div></div>";}).join("");
+}
+function buildCatGrid(){const g=document.getElementById("cat-grid");CATEGORIAS.forEach(cat=>{const b=document.createElement("button");b.className="cat-btn"+(cat.id===catSel?" sel":"");b.id="cat-"+cat.id;b.style.borderColor=cat.id===catSel?cat.color:"#2a2a3a";b.textContent=cat.label;b.onclick=()=>{catSel=cat.id;CATEGORIAS.forEach(c=>{const el=document.getElementById("cat-"+c.id);if(el){el.className="cat-btn"+(c.id===cat.id?" sel":"");el.style.borderColor=c.id===cat.id?c.color:"#2a2a3a";}});};g.appendChild(b);});}
+async function init(){
+  buildCatGrid();
+  // Debug: mostrar hash en consola
+  console.log("Hash:", location.hash);
+  console.log("Search:", location.search);
+  // Intentar también desde search params por si el hash falla
+  if(location.search.includes('access_token')){
+    const p=new URLSearchParams(location.search.substring(1));
+    const t=p.get('access_token');
+    if(t){accessToken=t;localStorage.setItem("pedro_token",t);localStorage.setItem("pedro_token_time",Date.now());}
+  }
+  if(checkToken()){
+    document.getElementById("login-overlay").style.display="none";
+    document.getElementById("app").style.display="block";
+    render();
+    await cargarDeDrive();
+    render();
+  } else {
+    // Mostrar debug info en pantalla
+    const dbg = document.createElement('div');
+    dbg.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#111;color:#888;font-size:10px;padding:4px 8px;z-index:9999';
+    dbg.textContent = 'URL: '+location.href.substring(0,80);
+    document.body.appendChild(dbg);
+  }
+}
+init();
+</script>
+</body>
+</html>
+<!-- MÓDULO DEUDA - se inyecta al cargar -->
+<script>
+// ===== MÓDULO EVOLUCIÓN DE DEUDA =====
+// Inyecta pestaña "📈 Deuda" en el tracker existente
+
+(function() {
+  // Esperar a que el DOM esté listo
+  function inyectarModulo() {
+    const tabs = document.querySelector('.tabs');
+    const content = document.querySelector('.content');
+    if (!tabs || !content) { setTimeout(inyectarModulo, 500); return; }
+
+    // Agregar pestaña
+    const tabBtn = document.createElement('button');
+    tabBtn.className = 'tab-btn';
+    tabBtn.textContent = '📈 Deuda';
+    tabBtn.onclick = function() { showTab('deuda', this); };
+    tabs.appendChild(tabBtn);
+
+    // Agregar panel
+    const panel = document.createElement('div');
+    panel.id = 'panel-deuda';
+    panel.className = 'panel';
+    panel.innerHTML = `
+      <div id="deuda-resumen-card" class="card" style="background:linear-gradient(135deg,#1a0d0d,#0f0808);border:1px solid #3a1a1a">
+        <div class="label">Deuda total hoy</div>
+        <div class="big-num red" id="deuda-total-hoy">Cargando...</div>
+        <div class="hint" id="deuda-intereses-hoy"></div>
+      </div>
+      <div class="grid2">
+        <div class="mini-card"><div class="label">Intereses este mes</div><div class="small-num red" id="int-mes"></div></div>
+        <div class="mini-card"><div class="label">Intereses este año</div><div class="small-num red" id="int-anio"></div></div>
+      </div>
+      <div class="card">
+        <div class="label">Evolución por crédito</div>
+        <div id="deuda-creditos-list" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="sep"><div class="label" style="margin:0">Registrar pago</div></div>
+        <div style="margin-top:8px">
+          <select id="pago-credito" style="background:#12121e;border:1px solid #2a2a3a;border-radius:8px;padding:10px 12px;color:#e8d5a3;font-size:13px;width:100%;font-family:Georgia,serif;outline:none;margin-bottom:8px"></select>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input type="number" id="pago-monto" placeholder="Monto pagado" style="flex:1">
+            <input type="date" id="pago-fecha" style="flex:1;background:#12121e;border:1px solid #2a2a3a;border-radius:8px;padding:10px 12px;color:#e8d5a3;font-size:13px;font-family:Georgia,serif;outline:none">
+          </div>
+          <button class="btn btn-green" style="width:100%" onclick="registrarPago()">✅ Registrar pago</button>
+        </div>
+        <div id="pagos-list" style="margin-top:12px"></div>
+      </div>
+      <div class="card" style="background:#0d1a0d;border-color:#1a3a1a">
+        <div class="label" style="color:#5a8a5a">ℹ️ ¿Cómo funciona el cálculo?</div>
+        <div style="font-size:12px;color:#7a8a7a;line-height:1.7;margin-top:6px">
+          Cada día se aplica la tasa diaria equivalente a la E.A. de cada crédito. Si pagas, ese monto se resta del saldo. El saldo editable te permite corregir si el banco muestra diferente.
+        </div>
+      </div>
+    `;
+    content.appendChild(panel);
+
+    // Poblar select de créditos
+    renderDeuda();
+  }
+
+  window.registrarPago = function() {
+    const creditoId = parseInt(document.getElementById('pago-credito').value);
+    const monto = parseInt(document.getElementById('pago-monto').value);
+    const fecha = document.getElementById('pago-fecha').value || HOY_KEY;
+    if (!creditoId || isNaN(monto)) return;
+    if (!APP.pagos) APP.pagos = [];
+    APP.pagos.push({ id: Date.now(), creditoId, monto, fecha });
+    // Restar del saldo del crédito
+    APP.creditos = APP.creditos.map(c => c.id === creditoId ? {...c, deuda: Math.max(0, c.deuda - monto)} : c);
+    document.getElementById('pago-monto').value = '';
+    programarGuardado();
+    renderDeuda();
+  };
+
+  window.renderDeuda = function() {
+    if (!document.getElementById('panel-deuda')) return;
+
+    // Llenar select
+    const sel = document.getElementById('pago-credito');
+    if (sel && sel.options.length === 0) {
+      APP.creditos.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.nombre;
+        sel.appendChild(opt);
+      });
+      // Fecha por defecto hoy
+      const fechaInput = document.getElementById('pago-fecha');
+      if (fechaInput) fechaInput.value = HOY_KEY;
+    }
+
+    // Calcular deuda con intereses acumulados desde inicio de mes
+    const inicio = new Date(HOY.getFullYear(), HOY.getMonth(), 1);
+    const diasMes = Math.floor((HOY - inicio) / (1000*60*60*24));
+
+    let totalHoy = 0, totalIntMes = 0;
+
+    const listHtml = APP.creditos.sort((a,b) => b.tasa - a.tasa).map(c => {
+      // Tasa diaria = (1 + EA)^(1/365) - 1
+      const tasaDiaria = Math.pow(1 + c.tasa/100, 1/365) - 1;
+      const intDiario = Math.round(c.deuda * tasaDiaria);
+      const intMes = Math.round(c.deuda * (Math.pow(1 + c.tasa/100, diasMes/365) - 1));
+      const deudaProyectada = Math.round(c.deuda * Math.pow(1 + c.tasa/100, 1/12));
+      totalHoy += c.deuda;
+      totalIntMes += intMes;
+
+      return `<div style="background:#080810;border:1px solid #2a2a3a;border-left:4px solid ${c.color};border-radius:10px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:bold">${c.nombre}</div>
+            <div style="font-size:10px;color:${c.tasa>=40?'#ef4444':c.tasa>=25?'#f59e0b':'#22c55e'}">${c.tasa}% E.A. · +${fmt(intDiario)}/día</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:15px;color:#ef4444;font-weight:bold">${fmt(c.deuda)}</div>
+            <div style="font-size:10px;color:#5a5a7a">saldo actual</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div style="background:#0d0d18;border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:#5a5a7a;margin-bottom:2px">INTERESES ESTE MES</div>
+            <div style="font-size:13px;color:#f59e0b;font-weight:bold">+${fmt(intMes)}</div>
+          </div>
+          <div style="background:#0d0d18;border-radius:6px;padding:8px;text-align:center">
+            <div style="font-size:9px;color:#5a5a7a;margin-bottom:2px">PRÓX. MES SIN PAGAR</div>
+            <div style="font-size:13px;color:#ef4444;font-weight:bold">${fmt(deudaProyectada)}</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
+          <div style="font-size:10px;color:#5a5a7a;white-space:nowrap">Corregir saldo:</div>
+          <input type="number" value="${c.deuda}" onblur="actualizarDeuda(${c.id},this.value);renderDeuda()" 
+            style="background:#12121e;border:1px solid #2a2a3a;border-radius:6px;padding:5px 8px;color:#e8d5a3;font-size:12px;width:100%;font-family:Georgia,serif;outline:none">
+        </div>
+      </div>`;
+    }).join('');
+
+    const totalIntAnio = Math.round(totalHoy * 0.25); // aprox promedio
+    const intHoyTotal = APP.creditos.reduce((s,c) => s + Math.round(c.deuda * (Math.pow(1+c.tasa/100, 1/365)-1)), 0);
+
+    document.getElementById('deuda-total-hoy').textContent = fmt(totalHoy);
+    document.getElementById('deuda-intereses-hoy').innerHTML = `Creciendo <strong style="color:#ef4444">+${fmt(intHoyTotal)}</strong> hoy por intereses`;
+    document.getElementById('int-mes').textContent = '+' + fmt(totalIntMes);
+    document.getElementById('int-anio').textContent = '~+' + fmt(totalIntAnio);
+    document.getElementById('deuda-creditos-list').innerHTML = listHtml;
+
+    // Pagos registrados
+    const pagos = (APP.pagos || []).slice().reverse().slice(0, 10);
+    const pl = document.getElementById('pagos-list');
+    if (pagos.length === 0) {
+      pl.innerHTML = '<div style="text-align:center;color:#3a3a5a;padding:12px;font-size:12px">Sin pagos registrados</div>';
+    } else {
+      pl.innerHTML = '<div class="label" style="margin-bottom:8px">Pagos registrados</div>' +
+        pagos.map(p => {
+          const c = APP.creditos.find(x => x.id === p.creditoId);
+          return `<div class="row">
+            <div><div class="row-label">${c ? c.nombre : 'Crédito'}</div><div class="row-sub">${p.fecha}</div></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="row-val green">-${fmt(p.monto)}</span>
+              <button onclick="eliminarPago(${p.id})" style="background:none;border:none;cursor:pointer;color:#4a2020;font-size:14px">✕</button>
+            </div>
+          </div>`;
+        }).join('');
+    }
+  };
+
+  window.eliminarPago = function(id) {
+    APP.pagos = (APP.pagos || []).filter(p => p.id !== id);
+    programarGuardado();
+    renderDeuda();
+  };
+
+  // Hook al render principal
+  const originalRender = window.render;
+  window.render = function() {
+    originalRender();
+    renderDeuda();
+  };
+
+  inyectarModulo();
+})();
+</script>
